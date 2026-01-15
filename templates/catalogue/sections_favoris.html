@@ -1,0 +1,45 @@
+{% if produits_favoris %}
+    <!-- Section Favoris -->
+    <div class="mb-4">
+        <h4 class="mb-3"><i class="bi bi-star-fill text-warning"></i> Vos produits habituels</h4>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for produit in produits_favoris %}
+            <div class="col">
+                <div class="card h-100 border-warning">
+                    <a href="{% url 'catalogue:detail' produit.reference %}" class="text-decoration-none">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center">
+                                {% if produit.image %}
+                                <img src="{{ produit.image }}" class="me-2 rounded" style="width: 60px; height: 60px; object-fit: cover;" alt="{{ produit.nom }}">
+                                {% else %}
+                                <div class="me-2 bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 text-dark">{{ produit.nom }}</h6>
+                                    <small class="text-primary fw-bold">{{ produit.prix|floatformat:2 }} € / {{ produit.unite }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="card-footer bg-white p-2">
+                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="reference" value="{{ produit.reference }}">
+                            <div class="input-group input-group-sm">
+                                <input type="number" name="quantite" value="1" min="1" max="{{ produit.stock }}" class="form-control text-center">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-cart-plus"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+    {% endif %}

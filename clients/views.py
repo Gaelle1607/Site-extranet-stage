@@ -7,7 +7,13 @@ from .forms import ConnexionForm
 def connexion(request):
     """Page de connexion"""
     if request.user.is_authenticated:
-        return redirect('catalogue:liste')
+        # Vérifier que l'utilisateur a un profil client
+        if hasattr(request.user, 'client'):
+            return redirect('catalogue:liste')
+        # Sinon, le déconnecter pour qu'il puisse se reconnecter avec un compte valide
+        from django.contrib.auth import logout
+        logout(request)
+        messages.warning(request, "Votre compte n'est pas associé à un profil client. Veuillez vous reconnecter ou contacter l'administrateur.")
 
     if request.method == 'POST':
         form = ConnexionForm(request, data=request.POST)
@@ -19,7 +25,7 @@ def connexion(request):
                 return render(request, 'clients/connexion.html', {'form': form})
             login(request, user)
             messages.success(request, f"Bienvenue, {user.client.nom if hasattr(user, 'client') else user.username} !")
-            return redirect('catalogue:liste')
+            return redirect('recommandations:liste')
     else:
         form = ConnexionForm()
 

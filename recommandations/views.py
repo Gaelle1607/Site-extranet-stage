@@ -1,21 +1,44 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
-from .services import obtenir_recommandations, obtenir_produits_complementaires
+from .services import obtenir_recommandations, obtenir_produits_favoris
+from catalogue.services import get_categories_client, get_produit_by_reference
 
 
 @login_required
 def mes_recommandations(request):
     """Page des recommandations personnalisées"""
+    if not hasattr(request.user, 'client'):
+        messages.error(request, "Votre compte n'est pas associé à un profil client.")
+        return redirect('clients:connexion')
+
     client = request.user.client
     recommandations = obtenir_recommandations(client, limite=12)
+    categories = get_categories_client(client)
 
-    # Ajouter le prix client
-    for produit in recommandations:
-        produit.prix_client = produit.get_prix_client(client)
+    # Récupérer le panier pour le récap
+    panier = request.session.get('panier', {})
+    lignes_panier = []
+    total_panier = 0
+    for reference, quantite in panier.items():
+        produit = get_produit_by_reference(client, reference)
+        if produit:
+            ligne_total = produit['prix'] * quantite
+            lignes_panier.append({
+                'reference': reference,
+                'nom': produit['nom'],
+                'quantite': quantite,
+                'prix': produit['prix'],
+                'total': ligne_total,
+            })
+            total_panier += ligne_total
 
     context = {
         'recommandations': recommandations,
+        'categories': categories,
+        'lignes_panier': lignes_panier,
+        'total_panier': total_panier,
     }
     return render(request, 'recommandations/liste.html', context)
 
@@ -23,6 +46,9 @@ def mes_recommandations(request):
 @login_required
 def api_recommandations(request):
     """API pour obtenir les recommandations en JSON"""
+    if not hasattr(request.user, 'client'):
+        return JsonResponse({'error': 'Client non trouvé'}, status=404)
+
     client = request.user.client
     limite = int(request.GET.get('limite', 8))
     recommandations = obtenir_recommandations(client, limite=limite)
@@ -30,35 +56,33 @@ def api_recommandations(request):
     data = []
     for produit in recommandations:
         data.append({
-            'id': produit.id,
-            'reference': produit.reference,
-            'nom': produit.nom,
-            'prix_client': float(produit.get_prix_client(client)),
-            'image': produit.image.url if produit.image else None,
-            'en_stock': produit.en_stock,
+            'reference': produit['reference'],
+            'nom': produit['nom'],
+            'prix': float(produit['prix']),
+            'image': produit.get('image'),
+            'stock': produit.get('stock', 0),
         })
 
     return JsonResponse({'recommandations': data})
 
 
 @login_required
-def api_produits_complementaires(request, produit_id):
-    """API pour obtenir les produits complémentaires"""
-    from catalogue.models import Produit
-    from django.shortcuts import get_object_or_404
+def api_produits_favoris(request):
+    """API pour obtenir les produits favoris en JSON"""
+    if not hasattr(request.user, 'client'):
+        return JsonResponse({'error': 'Client non trouvé'}, status=404)
 
     client = request.user.client
-    produit = get_object_or_404(Produit, pk=produit_id)
-    complementaires = obtenir_produits_complementaires(produit, limite=4)
+    limite = int(request.GET.get('limite', 4))
+    favoris = obtenir_produits_favoris(client, limite=limite)
 
     data = []
-    for p in complementaires:
+    for produit in favoris:
         data.append({
-            'id': p.id,
-            'reference': p.reference,
-            'nom': p.nom,
-            'prix_client': float(p.get_prix_client(client)),
-            'image': p.image.url if p.image else None,
+            'reference': produit['reference'],
+            'nom': produit['nom'],
+            'prix': float(produit['prix']),
+            'image': produit.get('image'),
         })
 
-    return JsonResponse({'produits': data})
+    return JsonResponse({'favoris': data})

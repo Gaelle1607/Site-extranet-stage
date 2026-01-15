@@ -6,5 +6,5 @@ app_name = 'recommandations'
 urlpatterns = [
     path('', views.mes_recommandations, name='liste'),
     path('api/', views.api_recommandations, name='api'),
-    path('api/complementaires/<int:produit_id>/', views.api_produits_complementaires, name='api_complementaires'),
+    path('api/favoris/', views.api_produits_favoris, name='api_favoris'),
 ]

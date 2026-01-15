@@ -13,7 +13,7 @@
                 <th>Numéro</th>
                 <th>Date</th>
                 <th>Articles</th>
-                <th>Total TTC</th>
+                <th>Total HT</th>
                 <th>Statut</th>
                 <th></th>
             </tr>
@@ -22,12 +22,12 @@
             {% for commande in commandes %}
             <tr>
                 <td><strong>{{ commande.numero }}</strong></td>
-                <td>{{ commande.date_commande|date:"d/m/Y" }}</td>
-                <td>{{ commande.nombre_articles }} article{{ commande.nombre_articles|pluralize }}</td>
-                <td>{{ commande.total_ttc|floatformat:2 }} €</td>
+                <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
+                <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
+                <td>{{ commande.total_ht|floatformat:2 }} €</td>
                 <td>
                     {% if commande.statut == 'en_attente' %}
-                    <span class="badge bg-warning">{{ commande.get_statut_display }}</span>
+                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
                     {% elif commande.statut == 'confirmee' %}
                     <span class="badge bg-info">{{ commande.get_statut_display }}</span>
                     {% elif commande.statut == 'en_preparation' %}
@@ -41,7 +41,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'commandes:detail' commande.numero %}" class="btn btn-outline-primary btn-sm">
+                    <a href="{% url 'commandes:details' commande.id %}" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-eye"></i> Détail
                     </a>
                 </td>

@@ -44,7 +44,7 @@
                                 <form method="post" action="{% url 'commandes:modifier' %}" class="modifier-quantite-form">
                                     {% csrf_token %}
                                     <input type="hidden" name="reference" value="{{ ligne.reference }}">
-                                    <input type="number" name="quantite" value="{{ ligne.quantite }}" min="0" class="form-control form-control-sm text-center quantite-input">
+                                    <input type="number" name="quantite" value="{{ ligne.quantite }}" min="0" max="{{ ligne.produit.stock }}" class="form-control form-control-sm text-center quantite-input">
                                 </form>
                             </td>
                             <td class="text-end">{{ ligne.produit.prix|floatformat:2 }} €</td>

@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'clients',
     'catalogue',
     'commandes',
+    'recommandations',
 ]
 
 MIDDLEWARE = [

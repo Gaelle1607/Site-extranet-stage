@@ -9,7 +9,7 @@
         {% if produit.categorie %}
         <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}?categorie={{ produit.categorie }}">{{ produit.categorie }}</a></li>
         {% endif %}
-        <li class="breadcrumb-item active">{{ produit.reference }}</li>
+        <li class="breadcrumb-item active">{{ produit.nom }}</li>
     </ol>
 </nav>
 
@@ -42,8 +42,10 @@
                     {% if produit.stock %}
                     <div class="col-auto">
                         <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
-                            {% if produit.stock > 0 %}
-                            <i class="bi bi-check-circle"></i> En stock ({{ produit.stock }})
+                            {% if produit.stock == 1 %}
+                            <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }}  {{produit.unite}}
+                            {% elif produit.stock > 1 %}
+                            <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }}  {{produit.unite}}s
                             {% else %}
                             <i class="bi bi-x-circle"></i> Rupture de stock
                             {% endif %}

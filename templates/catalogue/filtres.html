@@ -1,0 +1,39 @@
+<!-- Filtres -->
+    <div class="col-md-2">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <!-- Recherche -->
+                    <div class="mb-3">
+                        <label class="form-label">Recherche</label>
+                        <input type="text" name="q" class="form-control" value="{{ recherche }}" placeholder="Nom, référence...">
+                    </div>
+
+                    <!-- Catégorie -->
+                    <div class="mb-3">
+                        <label class="form-label">Catégorie</label>
+                        <select name="categorie" class="form-select">
+                            <option value="">Toutes</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if categorie_active == cat %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                    {% if recherche or categorie_active %}
+                    <a href="{% url 'catalogue:liste' %}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Enlever le filtre
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>

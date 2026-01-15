@@ -1,12 +1,38 @@
 """
 Service de recommandations basé sur les habitudes d'achat.
+
+Les produits viennent d'une source externe via catalogue.services,
+donc ce service travaille avec des références produit (string).
 """
 
-from django.db.models import Count, Sum, F
-from django.utils import timezone
-from datetime import timedelta
-from catalogue.models import Produit, Categorie
+from django.db.models import Count, Sum
 from .models import HistoriqueAchat, PreferenceCategorie
+from catalogue.services import get_produits_client, get_produit_by_reference
+
+
+def obtenir_produits_favoris(client, limite=4):
+    """
+    Retourne les produits les plus commandés par le client.
+
+    Args:
+        client: Instance Client
+        limite: Nombre de produits à retourner
+
+    Returns:
+        Liste de dictionnaires produit
+    """
+    # Récupérer l'historique des achats du client
+    historique = HistoriqueAchat.objects.filter(
+        client=client
+    ).order_by('-nombre_commandes', '-quantite_totale')[:limite]
+
+    produits_favoris = []
+    for h in historique:
+        produit = get_produit_by_reference(client, h.reference_produit)
+        if produit:
+            produits_favoris.append(produit)
+
+    return produits_favoris
 
 
 def obtenir_recommandations(client, limite=8):
@@ -16,126 +42,87 @@ def obtenir_recommandations(client, limite=8):
     Algorithme:
     1. Produits fréquemment achetés par le client
     2. Produits de ses catégories préférées
-    3. Produits populaires auprès de clients similaires
-    4. Produits mis en avant
+    3. Produits populaires globalement
 
     Args:
         client: Instance Client
         limite: Nombre de recommandations à retourner
 
     Returns:
-        QuerySet de Produit
+        Liste de dictionnaires produit
     """
     recommandations = []
-    ids_exclus = set()
+    refs_exclus = set()
 
     # 1. Produits régulièrement achetés (réassort)
-    produits_reguliers = obtenir_produits_reguliers(client, limite=4)
+    produits_reguliers = obtenir_produits_favoris(client, limite=4)
     for p in produits_reguliers:
-        if p.id not in ids_exclus:
+        if p['reference'] not in refs_exclus:
             recommandations.append(p)
-            ids_exclus.add(p.id)
+            refs_exclus.add(p['reference'])
 
-    # 2. Produits des catégories préférées (nouveautés)
-    produits_categories = obtenir_produits_categories_preferees(client, ids_exclus, limite=4)
-    for p in produits_categories:
-        if p.id not in ids_exclus:
-            recommandations.append(p)
-            ids_exclus.add(p.id)
-
-    # 3. Produits populaires globalement
+    # 2. Produits des catégories préférées
     if len(recommandations) < limite:
-        produits_populaires = obtenir_produits_populaires(ids_exclus, limite=limite - len(recommandations))
-        for p in produits_populaires:
-            if p.id not in ids_exclus:
+        produits_categories = obtenir_produits_categories_preferees(client, refs_exclus, limite=4)
+        for p in produits_categories:
+            if p['reference'] not in refs_exclus and len(recommandations) < limite:
                 recommandations.append(p)
-                ids_exclus.add(p.id)
+                refs_exclus.add(p['reference'])
 
-    # 4. Compléter avec produits mis en avant
+    # 3. Compléter avec d'autres produits disponibles
     if len(recommandations) < limite:
-        produits_avant = Produit.objects.filter(
-            actif=True,
-            mise_en_avant=True
-        ).exclude(id__in=ids_exclus)[:limite - len(recommandations)]
-        recommandations.extend(produits_avant)
+        tous_produits = get_produits_client(client)
+        for p in tous_produits:
+            if p['reference'] not in refs_exclus and len(recommandations) < limite:
+                recommandations.append(p)
+                refs_exclus.add(p['reference'])
 
     return recommandations[:limite]
 
 
-def obtenir_produits_reguliers(client, limite=4):
+def obtenir_produits_categories_preferees(client, refs_exclus, limite=4):
     """
-    Retourne les produits régulièrement achetés par le client.
-    """
-    historique = HistoriqueAchat.objects.filter(
-        client=client,
-        produit__actif=True
-    ).select_related('produit').order_by('-nombre_commandes', '-quantite_totale')[:limite]
-
-    return [h.produit for h in historique]
-
-
-def obtenir_produits_categories_preferees(client, ids_exclus, limite=4):
-    """
-    Retourne des produits des catégories préférées du client qu'il n'a pas encore achetés.
+    Retourne des produits des catégories préférées du client.
     """
     # Identifier les catégories préférées
     categories_preferees = HistoriqueAchat.objects.filter(
         client=client
-    ).values('produit__categorie').annotate(
+    ).exclude(categorie='').values('categorie').annotate(
         total=Sum('quantite_totale')
     ).order_by('-total')[:3]
 
-    categories_ids = [c['produit__categorie'] for c in categories_preferees if c['produit__categorie']]
+    categories_noms = [c['categorie'] for c in categories_preferees]
 
-    if not categories_ids:
+    if not categories_noms:
         return []
 
-    # Produits de ces catégories non encore achetés
-    produits_achetes = HistoriqueAchat.objects.filter(
-        client=client
-    ).values_list('produit_id', flat=True)
+    # Récupérer tous les produits et filtrer par catégorie
+    tous_produits = get_produits_client(client)
+    produits = []
+    for p in tous_produits:
+        if (p.get('categorie') in categories_noms and
+                p['reference'] not in refs_exclus and
+                len(produits) < limite):
+            produits.append(p)
 
-    produits = Produit.objects.filter(
-        actif=True,
-        categorie_id__in=categories_ids
-    ).exclude(
-        id__in=produits_achetes
-    ).exclude(
-        id__in=ids_exclus
-    ).order_by('-mise_en_avant', '?')[:limite]
-
-    return list(produits)
+    return produits
 
 
-def obtenir_produits_populaires(ids_exclus, limite=4):
-    """
-    Retourne les produits les plus populaires globalement.
-    """
-    produits_populaires = HistoriqueAchat.objects.values('produit').annotate(
-        total_clients=Count('client', distinct=True),
-        total_quantite=Sum('quantite_totale')
-    ).order_by('-total_clients', '-total_quantite')[:limite * 2]
-
-    ids_populaires = [p['produit'] for p in produits_populaires]
-
-    return Produit.objects.filter(
-        id__in=ids_populaires,
-        actif=True
-    ).exclude(id__in=ids_exclus)[:limite]
-
-
-def mettre_a_jour_historique_commande(commande):
+def mettre_a_jour_historique_commande(client, lignes_panier):
     """
     Met à jour l'historique des achats après une commande.
 
     Args:
-        commande: Instance Commande
+        client: Instance Client
+        lignes_panier: Liste de dict avec 'reference', 'quantite', 'produit'
     """
-    for ligne in commande.lignes.all():
+    for ligne in lignes_panier:
+        categorie = ligne.get('produit', {}).get('categorie', '')
         HistoriqueAchat.enregistrer_achat(
-            client=commande.client,
-            produit=ligne.produit,
-            quantite=ligne.quantite
+            client=client,
+            reference_produit=ligne['reference'],
+            quantite=ligne['quantite'],
+            categorie=categorie
         )
 
 
@@ -146,37 +133,16 @@ def calculer_preferences_categories(client):
     # Calculer les scores par catégorie
     stats = HistoriqueAchat.objects.filter(
         client=client
-    ).values('produit__categorie').annotate(
-        score=Sum('quantite_totale') * Count('produit', distinct=True)
+    ).exclude(categorie='').values('categorie').annotate(
+        total_quantite=Sum('quantite_totale'),
+        nb_produits=Count('reference_produit', distinct=True)
     )
 
     # Mettre à jour les préférences
     for stat in stats:
-        if stat['produit__categorie']:
-            PreferenceCategorie.objects.update_or_create(
-                client=client,
-                categorie_id=stat['produit__categorie'],
-                defaults={'score': stat['score']}
-            )
-
-
-def obtenir_produits_complementaires(produit, limite=4):
-    """
-    Retourne des produits souvent achetés avec le produit donné.
-    """
-    # Clients ayant acheté ce produit
-    clients_ayant_achete = HistoriqueAchat.objects.filter(
-        produit=produit
-    ).values_list('client_id', flat=True)
-
-    # Autres produits achetés par ces clients
-    produits_associes = HistoriqueAchat.objects.filter(
-        client_id__in=clients_ayant_achete
-    ).exclude(
-        produit=produit
-    ).values('produit').annotate(
-        score=Count('client')
-    ).order_by('-score')[:limite]
-
-    ids = [p['produit'] for p in produits_associes]
-    return Produit.objects.filter(id__in=ids, actif=True)
+        score = stat['total_quantite'] * stat['nb_produits']
+        PreferenceCategorie.objects.update_or_create(
+            client=client,
+            categorie=stat['categorie'],
+            defaults={'score': score}
+        )

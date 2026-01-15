@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from decimal import Decimal
 from catalogue.services import get_produit_by_reference
 from .services import envoyer_commande
+from .models import Commande, LigneCommande
 
 
 def get_panier(request):
@@ -71,10 +73,28 @@ def ajouter_au_panier(request):
     nom = produit['nom'] if produit else reference
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Construire les données du panier pour le récap
+        lignes_panier = []
+        total_panier = 0
+        for ref, qte in panier.items():
+            p = get_produit_by_reference(client, ref)
+            if p:
+                ligne_total = p['prix'] * qte
+                lignes_panier.append({
+                    'reference': ref,
+                    'nom': p['nom'],
+                    'quantite': qte,
+                    'prix': p['prix'],
+                    'total': ligne_total,
+                })
+                total_panier += ligne_total
+
         return JsonResponse({
             'success': True,
             'message': f'{nom} ajouté au panier',
-            'panier_count': sum(panier.values())
+            'panier_count': sum(panier.values()),
+            'lignes_panier': lignes_panier,
+            'total_panier': total_panier,
         })
 
     messages.success(request, f'{nom} ajouté au panier.')
@@ -89,30 +109,35 @@ def modifier_quantite(request):
     quantite = int(request.POST.get('quantite', 0))
 
     panier = get_panier(request)
+    client = request.user.client
 
     if quantite <= 0:
         if reference in panier:
             del panier[reference]
         message = 'Article supprimé.'
+        total_ligne = 0
     else:
         panier[reference] = quantite
         message = 'Quantité mise à jour.'
+        # Calculer le total de la ligne
+        produit = get_produit_by_reference(client, reference)
+        total_ligne = produit['prix'] * quantite if produit else 0
 
     save_panier(request, panier)
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Recalculer le total
-        client = request.user.client
-        total = 0
+        # Recalculer le total du panier
+        total_panier = 0
         for ref, qte in panier.items():
             produit = get_produit_by_reference(client, ref)
             if produit:
-                total += produit['prix'] * qte
+                total_panier += produit['prix'] * qte
 
         return JsonResponse({
             'success': True,
             'message': message,
-            'total_panier': total,
+            'total_panier': total_panier,
+            'total_ligne': total_ligne,
             'panier_count': sum(panier.values())
         })
 
@@ -132,11 +157,36 @@ def supprimer_du_panier(request):
     save_panier(request, panier)
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': True,
-            'message': 'Article supprimé',
-            'panier_count': sum(panier.values())
-        })
+        # Recalculer le total
+        try:
+            client = request.user.client
+            total_panier = 0
+            lignes_panier = []
+            for ref, qte in panier.items():
+                produit = get_produit_by_reference(client, ref)
+                if produit:
+                    total_ligne = produit['prix'] * qte
+                    total_panier += total_ligne
+                    lignes_panier.append({
+                        'reference': ref,
+                        'nom': produit['nom'],
+                        'quantite': qte,
+                        'prix': produit['prix'],
+                        'total': total_ligne,
+                    })
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Article supprimé',
+                'panier_count': sum(panier.values()),
+                'total_panier': total_panier,
+                'lignes_panier': lignes_panier
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erreur: {str(e)}'
+            }, status=500)
 
     messages.success(request, 'Article supprimé du panier.')
     return redirect('commandes:panier')
@@ -191,9 +241,47 @@ def valider_commande(request):
             'notes': notes,
         }
 
+        # DEBUG: Afficher la commande dans le terminal
+        print("\n" + "="*60)
+        print("NOUVELLE COMMANDE REÇUE")
+        print("="*60)
+        print(f"Client: {client.nom}")
+        print(f"Date: {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+        print("-"*60)
+        print("Articles:")
+        for ligne in lignes:
+            print(f"  - {ligne['nom']} ({ligne['reference']})")
+            print(f"    Qté: {ligne['quantite']} x {ligne['prix']:.2f} € = {ligne['total']:.2f} €")
+        print("-"*60)
+        print(f"TOTAL HT: {total:.2f} €")
+        if notes:
+            print(f"Notes: {notes}")
+        print("="*60 + "\n")
+
         # Envoyer au logiciel externe
         try:
             resultat = envoyer_commande(commande_data)
+
+            # Sauvegarder la commande en base de données
+            commande = Commande.objects.create(
+                client=client,
+                numero=Commande.generer_numero(),
+                total_ht=Decimal(str(total)),
+                commentaire=notes,
+                statut='en_attente'
+            )
+
+            # Créer les lignes de commande
+            for ligne in lignes:
+                LigneCommande.objects.create(
+                    commande=commande,
+                    reference_produit=ligne['reference'],
+                    nom_produit=ligne['nom'],
+                    quantite=ligne['quantite'],
+                    prix_unitaire=Decimal(str(ligne['prix'])),
+                    total_ligne=Decimal(str(ligne['total']))
+                )
+
             # Vider le panier
             request.session['panier'] = {}
             request.session.modified = True
@@ -216,3 +304,24 @@ def valider_commande(request):
 def confirmation_commande(request):
     """Page de confirmation après envoi"""
     return render(request, 'commandes/confirmation.html')
+
+@login_required
+def historique_commandes(request):
+    """Affiche l'historique des commandes du client"""
+    client = request.user.client
+    commandes = Commande.objects.filter(client=client).order_by('-date_commande')
+    return render(request, 'commandes/historique.html', {
+        'client': client,
+        'commandes': commandes
+    })
+
+
+@login_required
+def details_commande(request, commande_id):
+    """Affiche les détails d'une commande spécifique"""
+    client = request.user.client
+    commande = get_object_or_404(Commande, id=commande_id, client=client)
+    return render(request, 'commandes/details.html', {
+        'client': client,
+        'commande': commande
+    })

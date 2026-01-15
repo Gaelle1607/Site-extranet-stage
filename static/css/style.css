@@ -29,10 +29,21 @@
 }
 
 /* Global */
+html {
+    height: 100%;
+}
+
 body {
     font-family: var(--font-body);
     background-color: var(--giffaud-gris-clair);
     color: var(--giffaud-noir);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -55,7 +66,8 @@ h1, h2, h3, h4, h5, h6,
     letter-spacing: 0.5px;
 }
 
-.navbar-dark .navbar-nav .nav-link {
+.navbar-dark .navbar-nav .nav-link,
+.navbar-dark .navbar-nav .nav-nom {
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
     transition: color 0.2s;
@@ -131,6 +143,12 @@ h1, h2, h3, h4, h5, h6,
     border: none;
     border-radius: 0;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover{
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
 }
 
 .card-header {
@@ -214,6 +232,12 @@ h1, h2, h3, h4, h5, h6,
 /* Panier badge */
 #panier-badge {
     font-size: 0.65rem;
+    background-color: var(--giffaud-accent) !important;
+    color: var(--giffaud-noir) !important;
+}
+
+/* Badge prix récap panier */
+.recap-prix-badge {
     background-color: var(--giffaud-accent) !important;
     color: var(--giffaud-noir) !important;
 }

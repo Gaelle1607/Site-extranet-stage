@@ -28,6 +28,7 @@ def get_produits_client(client):
                 'unite': 'kg',
                 'stock': 100,  # optionnel
                 'image': 'url_image',  # optionnel
+                'nb_commandes': 5,  # optionnel - nombre de fois commandé par ce client
             },
             ...
         ]
@@ -48,6 +49,7 @@ def get_produits_client(client):
             'prix': 12.50,
             'unite': 'kg',
             'stock': 50,
+            'nb_commandes': 3,
         },
         {
             'reference': 'PORC002',
@@ -57,6 +59,7 @@ def get_produits_client(client):
             'prix': 8.90,
             'unite': 'kg',
             'stock': 30,
+            'nb_commandes': 12,  # Favori
         },
         {
             'reference': 'PORC003',
@@ -66,6 +69,7 @@ def get_produits_client(client):
             'prix': 9.50,
             'unite': 'kg',
             'stock': 25,
+            'nb_commandes': 8,  # Favori
         },
         {
             'reference': 'BOEUF001',
@@ -75,6 +79,78 @@ def get_produits_client(client):
             'prix': 24.90,
             'unite': 'kg',
             'stock': 20,
+            'nb_commandes': 2,
+        },
+        {
+            'reference': 'BOEUF002',
+            'nom': 'Faux-filet',
+            'description': 'Faux-filet de bœuf persillé',
+            'categorie': 'Bœuf',
+            'prix': 22.50,
+            'unite': 'kg',
+            'stock': 15,
+            'nb_commandes': 0,
+        },
+        {
+            'reference': 'BOEUF003',
+            'nom': 'Bavette',
+            'description': 'Bavette de bœuf tendre',
+            'categorie': 'Bœuf',
+            'prix': 18.90,
+            'unite': 'kg',
+            'stock': 25,
+            'nb_commandes': 1,
+        },
+        {
+            'reference': 'VOLAILLE001',
+            'nom': 'Poulet fermier',
+            'description': 'Poulet fermier entier Label Rouge',
+            'categorie': 'Volaille',
+            'prix': 9.80,
+            'unite': 'kg',
+            'stock': 40,
+            'nb_commandes': 15,  # Favori
+        },
+        {
+            'reference': 'VOLAILLE003',
+            'nom': 'Cuisses de poulet',
+            'description': 'Cuisses de poulet fermier - Barquette de 4 pièces (environ 1,2 kg)',
+            'categorie': 'Volaille',
+            'prix': 7.90,
+            'unite': 'barquette',
+            'stock': 50,
+            'image': '/static/images/produits/cuisses-poulet.jpg',
+            'nb_commandes': 20,  # Favori - le plus commandé
+        },
+        {
+            'reference': 'VOLAILLE002',
+            'nom': 'Cuisses de canard',
+            'description': 'Cuisses de canard confites',
+            'categorie': 'Volaille',
+            'prix': 14.50,
+            'unite': 'kg',
+            'stock': 20,
+            'nb_commandes': 0,
+        },
+        {
+            'reference': 'CHARC001',
+            'nom': 'Jambon blanc',
+            'description': 'Jambon blanc supérieur sans nitrite',
+            'categorie': 'Charcuterie',
+            'prix': 16.90,
+            'unite': 'kg',
+            'stock': 35,
+            'nb_commandes': 5,
+        },
+        {
+            'reference': 'CHARC002',
+            'nom': 'Pâté de campagne',
+            'description': 'Pâté de campagne artisanal',
+            'categorie': 'Charcuterie',
+            'prix': 11.50,
+            'unite': 'kg',
+            'stock': 30,
+            'nb_commandes': 0,
         },
     ]
 

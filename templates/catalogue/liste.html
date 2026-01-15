@@ -4,43 +4,12 @@
 
 {% block content %}
 <div class="row">
-    <!-- Filtres -->
-    <div class="col-md-3">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
-            </div>
-            <div class="card-body">
-                <form method="get">
-                    <!-- Recherche -->
-                    <div class="mb-3">
-                        <label class="form-label">Recherche</label>
-                        <input type="text" name="q" class="form-control" value="{{ recherche }}" placeholder="Nom, référence...">
-                    </div>
-
-                    <!-- Catégorie -->
-                    <div class="mb-3">
-                        <label class="form-label">Catégorie</label>
-                        <select name="categorie" class="form-select">
-                            <option value="">Toutes</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat }}" {% if categorie_active == cat %}selected{% endif %}>
-                                {{ cat }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Filtrer
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
+    {% include 'catalogue/filtres.html' %}
     <!-- Produits -->
-    <div class="col-md-9">
+    <div class="col-md-7">
+        {% include 'catalogue/sections_favoris.html' %}
+        
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Catalogue</h2>
             <span class="text-muted">{{ produits|length }} produit{{ produits|length|pluralize }}</span>
@@ -80,21 +49,24 @@
                             {% endif %}
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'catalogue:detail' produit.reference %}" class="btn btn-outline-primary btn-sm flex-grow-1">
-                                <i class="bi bi-eye"></i> Voir
-                            </a>
-                            {% if not produit.stock or produit.stock > 0 %}
-                            <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="reference" value="{{ produit.reference }}">
-                                <input type="hidden" name="quantite" value="1">
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-cart-plus"></i>
+                        <!-- Quantité et ajout panier -->
+                        {% if not produit.stock or produit.stock > 0 %}
+                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="reference" value="{{ produit.reference }}">
+                            <div class="input-group">
+                                <input type="number" name="quantite" value="1" min="1" max="{{ produit.stock }}" class="form-control text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-cart-plus"></i> Ajouter
                                 </button>
-                            </form>
-                            {% endif %}
-                        </div>
+                            </div>
+                        </form>
+                        {% endif %}
+
+                        <!-- Bouton Voir produit -->
+                        <a href="{% url 'catalogue:detail' produit.reference %}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="bi bi-eye"></i> Voir produit
+                        </a>
                     </div>
                 </div>
             </div>
@@ -109,5 +81,8 @@
         </div>
         {% endif %}
     </div>
+
+    {% include 'catalogue/recap_panier.html' %}
+
 </div>
 {% endblock %}

@@ -2,6 +2,13 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    // Restaurer la position de scroll après rechargement
+    const savedScrollPos = sessionStorage.getItem('scrollPos');
+    if (savedScrollPos) {
+        window.scrollTo(0, parseInt(savedScrollPos));
+        sessionStorage.removeItem('scrollPos');
+    }
+
     // Ajout au panier en AJAX
     document.querySelectorAll('.ajouter-panier-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
@@ -21,20 +28,21 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('loading');
+                btn.disabled = false;
+
                 if (data.success) {
                     // Mettre à jour le badge du panier
                     updatePanierBadge(data.panier_count);
 
-                    // Afficher notification
-                    showNotification(data.message, 'success');
+                    // Mettre à jour le récap panier (sur la page catalogue)
+                    if (data.lignes_panier) {
+                        updateRecapPanier(data.lignes_panier, data.total_panier);
+                    }
 
-                    // Animation du bouton
-                    btn.innerHTML = '<i class="bi bi-check"></i>';
-                    setTimeout(() => {
-                        btn.innerHTML = originalContent;
-                        btn.classList.remove('loading');
-                        btn.disabled = false;
-                    }, 1000);
+                    // Notification de succès
+                    showNotification(data.message, 'success');
                 }
             })
             .catch(error => {
@@ -59,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Suppression du panier
+    // Suppression du panier (page panier)
     document.querySelectorAll('.supprimer-ligne-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -83,6 +91,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Mettre à jour les totaux
                     updatePanierBadge(data.panier_count);
                     updatePanierTotal(data.total_panier);
+                    updateNombreArticles(data.panier_count);
+
+                    // Mettre à jour le récap panier aussi
+                    if (data.lignes_panier) {
+                        updateRecapPanier(data.lignes_panier, data.total_panier);
+                    }
 
                     showNotification(data.message, 'success');
 
@@ -98,6 +112,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    // Attacher les listeners pour le récap panier (page catalogue)
+    attachSupprimerRecapListeners();
 });
 
 function submitQuantiteForm(form) {
@@ -115,7 +132,7 @@ function submitQuantiteForm(form) {
             const row = form.closest('tr');
             if (row) {
                 const totalCell = row.querySelector('.ligne-total');
-                if (totalCell && data.total_ligne) {
+                if (totalCell && data.total_ligne !== undefined) {
                     totalCell.textContent = data.total_ligne.toFixed(2) + ' €';
                 }
             }
@@ -123,6 +140,7 @@ function submitQuantiteForm(form) {
             // Mettre à jour les totaux
             updatePanierBadge(data.panier_count);
             updatePanierTotal(data.total_panier);
+            updateNombreArticles(data.panier_count);
 
             // Si quantité 0, supprimer la ligne
             const quantiteInput = form.querySelector('.quantite-input');
@@ -169,9 +187,135 @@ function updatePanierTotal(total) {
     }
 }
 
+function updateNombreArticles(count) {
+    // Mettre à jour le nombre d'articles dans le récapitulatif de la page panier
+    const articlesElements = document.querySelectorAll('.card-body .d-flex.justify-content-between.mb-2 span:last-child');
+    articlesElements.forEach(el => {
+        if (el.previousElementSibling && el.previousElementSibling.textContent === 'Articles') {
+            el.textContent = count;
+        }
+    });
+}
+
+function updateRecapPanier(lignes, total) {
+    const recapContainer = document.getElementById('recap-panier-content');
+    if (!recapContainer) return;
+
+    if (lignes && lignes.length > 0) {
+        let html = '<div class="list-group list-group-flush mb-3">';
+        lignes.forEach(ligne => {
+            html += `
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <small class="fw-bold">${ligne.nom}</small>
+                            <br>
+                            <small class="text-muted">${ligne.quantite} x ${ligne.prix.toFixed(2)} €</small>
+                        </div>
+                        <span class="badge recap-prix-badge me-2">${ligne.total.toFixed(2)} €</span>
+                        <form method="post" action="/commandes/panier/supprimer/" class="supprimer-recap-form">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
+                            <input type="hidden" name="reference" value="${ligne.reference}">
+                            <button type="submit" class="btn btn-link text-danger p-0" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        html += '<hr>';
+        html += `
+            <div class="d-flex justify-content-between mb-3">
+                <span class="fw-bold">Total HT</span>
+                <span class="fw-bold h5 mb-0">${total.toFixed(2)} €</span>
+            </div>
+            <div class="d-grid gap-2">
+                <a href="/commandes/panier/" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
+                <a href="/commandes/valider/" class="btn btn-success">
+                    <i class="bi bi-check2-circle"></i> Commander
+                </a>
+            </div>
+        `;
+        recapContainer.innerHTML = html;
+
+        // Réattacher les event listeners aux nouveaux boutons supprimer
+        attachSupprimerRecapListeners();
+    } else {
+        recapContainer.innerHTML = `
+            <div class="text-center py-3">
+                <i class="bi bi-cart-x text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2 mb-0">Panier vide</p>
+            </div>
+        `;
+    }
+}
+
+function getCSRFToken() {
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (csrfInput) return csrfInput.value;
+
+    // Fallback: chercher dans les cookies
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return value;
+    }
+    return '';
+}
+
+function attachSupprimerRecapListeners() {
+    document.querySelectorAll('.supprimer-recap-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour le badge du panier
+                    updatePanierBadge(data.panier_count);
+
+                    // Reconstruire le récap panier
+                    if (data.panier_count === 0) {
+                        updateRecapPanier([], 0);
+                    } else {
+                        // Supprimer la ligne du récap
+                        const listItem = form.closest('.list-group-item');
+                        if (listItem) listItem.remove();
+
+                        // Mettre à jour le total affiché
+                        const totalElement = document.querySelector('#recap-panier-content .h5.mb-0');
+                        if (totalElement) {
+                            totalElement.textContent = data.total_panier.toFixed(2) + ' €';
+                        }
+                    }
+
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.message || 'Une erreur est survenue', 'danger');
+                    console.error('Erreur serveur:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur fetch:', error);
+                showNotification('Une erreur est survenue', 'danger');
+            });
+        });
+    });
+}
+
 function showNotification(message, type) {
     // Créer une notification toast
-    const container = document.querySelector('.container');
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alert.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';

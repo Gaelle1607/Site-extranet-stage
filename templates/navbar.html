@@ -1,0 +1,57 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'catalogue:liste' %}">
+                GIFFAUD GROUPE
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'recommandations:liste' %}">
+                            <i class="bi bi-lightbulb"></i> Recommandations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'catalogue:liste' %}">
+                            <i class="bi bi-grid-3x3-gap"></i> Catalogue
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'catalogue:favoris' %}">
+                            <i class="bi bi-star-fill"></i> Favoris
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{% url 'commandes:panier' %}">
+                            <i class="bi bi-cart3"></i> Panier
+                            {% if panier_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" id="panier-badge">
+                                {{ panier_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'commandes:historique' %}">
+                            <i class="bi bi-clock-history"></i> Mes commandes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-nom">
+                            <i class="bi bi-person-circle"></i> {{ user.client.nom|default:user.username }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'clients:deconnexion' %}">
+                            <i class="bi bi-box-arrow-right"></i> Déconnexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>

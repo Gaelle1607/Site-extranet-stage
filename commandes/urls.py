@@ -11,4 +11,6 @@ urlpatterns = [
     path('panier/vider/', views.vider_panier, name='vider'),
     path('valider/', views.valider_commande, name='valider'),
     path('confirmation/', views.confirmation_commande, name='confirmation'),
+    path('historique/', views.historique_commandes, name='historique'),
+    path('details/<int:commande_id>/', views.details_commande, name='details'),
 ]
