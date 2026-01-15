@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ produit.nom }} - Extranet B2B{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}">Catalogue</a></li>
+        {% if produit.categorie %}
+        <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}?categorie={{ produit.categorie }}">{{ produit.categorie }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active">{{ produit.reference }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-md-5">
+        {% if produit.image %}
+        <img src="{{ produit.image }}" class="img-fluid rounded" alt="{{ produit.nom }}">
+        {% else %}
+        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+            <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-7">
+        <span class="text-muted">{{ produit.reference }}</span>
+        <h1>{{ produit.nom }}</h1>
+
+        {% if produit.categorie %}
+        <span class="badge bg-secondary mb-3">{{ produit.categorie }}</span>
+        {% endif %}
+
+        <div class="card bg-light mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <span class="h2 text-primary">{{ produit.prix|floatformat:2 }} €</span>
+                        <span class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</span>
+                    </div>
+                    {% if produit.stock %}
+                    <div class="col-auto">
+                        <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                            {% if produit.stock > 0 %}
+                            <i class="bi bi-check-circle"></i> En stock ({{ produit.stock }})
+                            {% else %}
+                            <i class="bi bi-x-circle"></i> Rupture de stock
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if not produit.stock or produit.stock > 0 %}
+        <form method="post" action="{% url 'commandes:ajouter' %}" class="mb-4 ajouter-panier-form">
+            {% csrf_token %}
+            <input type="hidden" name="reference" value="{{ produit.reference }}">
+            <div class="row g-2">
+                <div class="col-auto">
+                    <input type="number" name="quantite" value="1" min="1" {% if produit.stock %}max="{{ produit.stock }}"{% endif %} class="form-control" style="width: 100px;">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-cart-plus"></i> Ajouter au panier
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+
+        {% if produit.description %}
+        <h5>Description</h5>
+        <p>{{ produit.description|linebreaks }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

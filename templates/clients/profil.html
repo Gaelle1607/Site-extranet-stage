@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon profil - Extranet B2B{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-building"></i> Ma société</h5>
+            </div>
+            <div class="card-body">
+                <h4>{{ client.societe }}</h4>
+                {% if client.siret %}
+                <p class="text-muted mb-1">SIRET: {{ client.siret }}</p>
+                {% endif %}
+                <hr>
+                <p class="mb-1"><strong>Conditions commerciales</strong></p>
+                <p class="mb-1">Remise générale: {{ client.remise_generale }}%</p>
+                <p class="mb-1">Délai de paiement: {{ client.delai_paiement }} jours</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Mes informations</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Prénom</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nom</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Téléphone</label>
+                        {{ form.telephone }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Adresse</label>
+                        {{ form.adresse }}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Code postal</label>
+                            {{ form.code_postal }}
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Ville</label>
+                            {{ form.ville }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Enregistrer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
