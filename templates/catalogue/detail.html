@@ -6,8 +6,8 @@
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}">Catalogue</a></li>
-        {% if produit.categorie %}
-        <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}?categorie={{ produit.categorie }}">{{ produit.categorie }}</a></li>
+        {% if produit.categories %}
+        <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}?categorie={{ produit.categories.0 }}">{{ produit.categories.0 }}</a></li>
         {% endif %}
         <li class="breadcrumb-item active">{{ produit.nom }}</li>
     </ol>
@@ -28,8 +28,12 @@
         <span class="text-muted">{{ produit.reference }}</span>
         <h1>{{ produit.nom }}</h1>
 
-        {% if produit.categorie %}
-        <span class="badge bg-secondary mb-3">{{ produit.categorie }}</span>
+        {% if produit.categories %}
+        <div class="mb-3">
+            {% for cat in produit.categories %}
+            <a href="{% url 'catalogue:liste' %}?categorie={{ cat }}" class="badge bg-secondary text-decoration-none">{{ cat }}</a>
+            {% endfor %}
+        </div>
         {% endif %}
 
         <div class="card bg-light mb-4">
@@ -39,7 +43,7 @@
                         <span class="h2 text-primary">{{ produit.prix|floatformat:2 }} €</span>
                         <span class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</span>
                     </div>
-                    {% if produit.stock %}
+                    {% if produit.stock is not None or produit.stock > 0 %}
                     <div class="col-auto">
                         <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
                             {% if produit.stock == 1 %}
@@ -56,7 +60,7 @@
             </div>
         </div>
 
-        {% if not produit.stock or produit.stock > 0 %}
+        {% if produit.stock is None or produit.stock > 0 %}
         <form method="post" action="{% url 'commandes:ajouter' %}" class="mb-4 ajouter-panier-form">
             {% csrf_token %}
             <input type="hidden" name="reference" value="{{ produit.reference }}">
@@ -71,6 +75,10 @@
                 </div>
             </div>
         </form>
+        {% else %}
+        <div class="text-center text-muted mb-4 py-2">
+            <i class="bi bi-x-circle"></i> Indisponible
+        </div>
         {% endif %}
 
         {% if produit.description %}

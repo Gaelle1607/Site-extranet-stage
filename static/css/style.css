@@ -45,6 +45,25 @@ body {
 main {
     flex: 1;
 }
+h4{
+    text-align: center;
+}
+.titre_nb_produits {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.titre_nb_produits h2 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+}
+
+.titre_nb_produits span {
+    position: absolute;
+    right: 0;
+}
 
 h1, h2, h3, h4, h5, h6,
 .navbar-brand,
@@ -192,6 +211,25 @@ h1, h2, h3, h4, h5, h6,
     border-top: 1px solid var(--giffaud-gris-clair);
 }
 
+/* Produits en rupture de stock */
+.produit-card.produit-rupture {
+    opacity: 0.6;
+    filter: grayscale(50%);
+}
+
+.produit-card.produit-rupture:hover {
+    transform: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.produit-card.produit-rupture .card-img-top {
+    filter: grayscale(30%);
+}
+
+.produit-card.produit-rupture:hover .card-img-top {
+    transform: none;
+}
+
 /* Prix */
 .text-primary {
     color: var(--giffaud-noir) !important;
@@ -286,6 +324,7 @@ h1, h2, h3, h4, h5, h6,
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
+
 .card.shadow .card-body {
     padding: 3rem;
 }
@@ -313,6 +352,11 @@ footer {
 footer p {
     margin-bottom: 0;
     opacity: 0.8;
+}
+
+footer a {
+    color: var(--giffaud-accent);
+    text-decoration: none;
 }
 
 /* Pagination */
@@ -442,6 +486,18 @@ footer p {
 }
 
 /* Responsive */
+@media (max-width: 991.98px) {
+    /* Aligner les éléments utilisateur à droite en mode mobile/tablette */
+    .navbar-nav.navbar-nav-right {
+        align-items: flex-end !important;
+        text-align: right;
+    }
+
+    .navbar-nav.navbar-nav-right .nav-link {
+        justify-content: flex-end;
+    }
+}
+
 @media (max-width: 768px) {
     .produit-card .card-img-top {
         height: 160px;

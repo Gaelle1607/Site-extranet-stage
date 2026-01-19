@@ -10,16 +10,16 @@
         {% include 'catalogue/sections_favoris.html' %}
         
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="titre_nb_produits mb-4">
             <h2>Catalogue</h2>
             <span class="text-muted">{{ produits|length }} produit{{ produits|length|pluralize }}</span>
         </div>
 
         {% if produits %}
-        <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for produit in produits %}
             <div class="col">
-                <div class="card h-100 produit-card">
+                <div class="card h-100 produit-card{% if produit.stock is not None and not produit.stock %} produit-rupture{% endif %}">
                     {% if produit.image %}
                     <img src="{{ produit.image }}" class="card-img-top" alt="{{ produit.nom }}">
                     {% else %}
@@ -42,7 +42,7 @@
                                 <span class="h5 mb-0 text-primary">{{ produit.prix|floatformat:2 }} €</span>
                                 <small class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</small>
                             </div>
-                            {% if produit.stock %}
+                            {% if produit.stock is not None %}
                             <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
                                 {% if produit.stock > 0 %}En stock{% else %}Rupture{% endif %}
                             </span>
@@ -50,7 +50,7 @@
                         </div>
 
                         <!-- Quantité et ajout panier -->
-                        {% if not produit.stock or produit.stock > 0 %}
+                        {% if produit.stock is None or produit.stock > 0 %}
                         <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-2">
                             {% csrf_token %}
                             <input type="hidden" name="reference" value="{{ produit.reference }}">
@@ -61,8 +61,12 @@
                                 </button>
                             </div>
                         </form>
+                        {% else %}
+                        <div class="text-center text-muted mb-2 py-2">
+                            <i class="bi bi-x-circle"></i> Indisponible
+                        </div>
                         {% endif %}
-
+                        
                         <!-- Bouton Voir produit -->
                         <a href="{% url 'catalogue:detail' produit.reference %}" class="btn btn-outline-primary btn-sm w-100">
                             <i class="bi bi-eye"></i> Voir produit

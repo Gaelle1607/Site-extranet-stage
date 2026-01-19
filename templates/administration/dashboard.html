@@ -1,0 +1,62 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Dashboard - Administration{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+</div>
+
+<div class="row g-4">
+    <!-- Carte exemple - Clients -->
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'administration:catalogue_client' %}" class="card-link">
+        <div class="card h-100">
+            <div class="card-body">  
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Clients</h6>
+                        <h3 class="mb-0">{{ nb_clients }}</h3>
+                    </div>
+                    <div class="text-primary">
+                        <i class="bi bi-people" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </a>
+    </div>
+
+    <!-- Carte exemple - Commandes -->
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'administration:liste_commande' %}" class="card-link">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-2">Commandes</h6>
+                        <h3 class="mb-0">{{ nb_commandes }}</h3>
+                    </div>
+                    <div class="text-success">
+                        <i class="bi bi-cart-check" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </a>
+    </div>
+
+
+
+<div class="col-6">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Bienvenue dans l'espace Administration</h5>
+        </div>
+            <div class="card-body">
+                <p class="mb-0">Utilisez le menu de gauche pour naviguer entre les différentes sections de l'administration.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

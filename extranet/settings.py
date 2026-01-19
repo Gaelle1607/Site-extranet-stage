@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'catalogue',
     'commandes',
     'recommandations',
+    'administration',
 ]
 
 MIDDLEWARE = [

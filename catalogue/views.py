@@ -18,7 +18,7 @@ def liste_produits(request):
     # Filtrer par catégorie
     categorie = request.GET.get('categorie')
     if categorie:
-        produits = [p for p in produits if p.get('categorie') == categorie]
+        produits = [p for p in produits if categorie in p.get('categories', [])]
 
     # Recherche
     recherche = request.GET.get('q', '').strip().lower()
@@ -39,6 +39,9 @@ def liste_produits(request):
         # Retirer les favoris de la liste principale
         refs_favoris = {p['reference'] for p in produits_favoris}
         produits = [p for p in produits if p['reference'] not in refs_favoris]
+
+    # Trier les produits par nombre de commandes décroissant
+    produits = sorted(produits, key=lambda x: x.get('nb_commandes', 0), reverse=True)
 
     # Récupérer le panier pour le récap
     panier = request.session.get('panier', {})
@@ -87,7 +90,7 @@ def favoris(request):
     # Filtrer par catégorie
     categorie = request.GET.get('categorie')
     if categorie:
-        produits_favoris = [p for p in produits_favoris if p.get('categorie') == categorie]
+        produits_favoris = [p for p in produits_favoris if categorie in p.get('categories', [])]
 
     # Recherche
     recherche = request.GET.get('q', '').strip().lower()
@@ -141,3 +144,7 @@ def detail_produit(request, reference):
         'produit': produit,
     }
     return render(request, 'catalogue/detail.html', context)
+
+def mentions_legales(request):
+    """Page des mentions légales"""
+    return render(request, 'mention_legale.html')

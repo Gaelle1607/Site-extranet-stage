@@ -100,7 +100,9 @@ def obtenir_produits_categories_preferees(client, refs_exclus, limite=4):
     tous_produits = get_produits_client(client)
     produits = []
     for p in tous_produits:
-        if (p.get('categorie') in categories_noms and
+        # Vérifier si au moins une catégorie du produit est dans les catégories préférées
+        produit_categories = p.get('categories', [])
+        if (any(cat in categories_noms for cat in produit_categories) and
                 p['reference'] not in refs_exclus and
                 len(produits) < limite):
             produits.append(p)
@@ -117,7 +119,10 @@ def mettre_a_jour_historique_commande(client, lignes_panier):
         lignes_panier: Liste de dict avec 'reference', 'quantite', 'produit'
     """
     for ligne in lignes_panier:
-        categorie = ligne.get('produit', {}).get('categorie', '')
+        # Prendre la première catégorie du produit (ou chaîne vide si pas de catégories)
+        produit = ligne.get('produit', {})
+        categories = produit.get('categories', [])
+        categorie = categories[0] if categories else ''
         HistoriqueAchat.enregistrer_achat(
             client=client,
             reference_produit=ligne['reference'],

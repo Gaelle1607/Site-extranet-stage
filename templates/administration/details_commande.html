@@ -1,0 +1,67 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Détails de la commande {{ commande.numero }}{% endblock %}
+
+{% block content %}
+    <div class="col-md-9 col-lg-10 px-md-4 py-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-text"></i> Détails de la commande {{ commande.numero }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Client :</strong> {{ commande.client.nom }}</p>
+                <p><strong>Date de commande :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+                <p><strong>Total HT :</strong> {{ commande.total_ht|floatformat:2 }} €</p>
+                <p><strong>Statut :</strong>
+                    {% if commande.statut == 'en_attente' %}
+                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
+                    {% elif commande.statut == 'confirmee' %}
+                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
+                    {% elif commande.statut == 'en_preparation' %}
+                    <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
+                    {% elif commande.statut == 'expediee' %}
+                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
+                    {% elif commande.statut == 'livree' %}
+                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
+                    {% elif commande.statut == 'annulee' %}
+                    <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
+                    {% endif %}
+                </p>
+
+                <!-- Articles de la commande -->
+                {% if commande.lignes.all %}
+                <h6>Articles</h6>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Prix unitaire</th>
+                            <th>Quantité</th>
+                            <th>Total HT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in commande.lignes.all %}
+                        <tr>
+                            <td>{{ ligne.nom_produit }}</td>
+                            <td>{{ ligne.prix_unitaire|floatformat:2 }} €</td>
+                            <td>{{ ligne.quantite }}</td>
+                            <td>{{ ligne.total_ligne|floatformat:2 }} €</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                <!-- Bouton pour retourner à la liste des commandes -->
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}

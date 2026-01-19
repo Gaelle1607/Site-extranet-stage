@@ -1,0 +1,42 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Cadencier - {{ client.nom }}{% endblock %}
+
+{% block content %}
+
+<h2>Cadencier de {{ client.nom }}</h2>
+
+<form method="get" class="d-flex gap-2 mb-3">
+    <input type="text" name="q" class="form-control" placeholder="Rechercher par référence ou nom" value="{{ query }}">
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+    {% if query %}
+    <a href="{% url 'administration:cadencier_client' client.id %}" class="btn btn-outline-secondary d-flex align-items-center">Effacer</a>
+    {% endif %}
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Référence</th>
+            <th>Produit</th>
+            <th>Prix en €</th>
+            <th>Unité</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for produit in produits %}
+        <tr>
+            <td>{{ produit.reference }}</td>
+            <td>{{ produit.nom }}</td>
+            <td>{{ produit.prix|floatformat:2 }}</td>
+            <td>{{ produit.unite }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">Aucun produit dans le cadencier.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

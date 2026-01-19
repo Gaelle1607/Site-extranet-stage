@@ -23,7 +23,7 @@ def get_produits_client(client):
                 'reference': 'REF001',
                 'nom': 'Produit 1',
                 'description': 'Description...',
-                'categorie': 'Catégorie A',
+                'categories': ['Catégorie A', 'Catégorie B'],  # Liste de catégories
                 'prix': 10.50,
                 'unite': 'kg',
                 'stock': 100,  # optionnel
@@ -45,7 +45,7 @@ def get_produits_client(client):
             'reference': 'PORC001',
             'nom': 'Filet mignon de porc',
             'description': 'Filet mignon de porc fermier',
-            'categorie': 'Porc',
+            'categories': ['Porc'],
             'prix': 12.50,
             'unite': 'kg',
             'stock': 50,
@@ -55,7 +55,7 @@ def get_produits_client(client):
             'reference': 'PORC002',
             'nom': 'Côtes de porc',
             'description': 'Côtes de porc fermier',
-            'categorie': 'Porc',
+            'categories': ['Porc'],
             'prix': 8.90,
             'unite': 'kg',
             'stock': 30,
@@ -65,17 +65,17 @@ def get_produits_client(client):
             'reference': 'PORC003',
             'nom': 'Saucisses',
             'description': 'Saucisses de porc fermier',
-            'categorie': 'Charcuterie',
+            'categories': ['Porc', 'Charcuterie'],  # Appartient à 2 catégories
             'prix': 9.50,
             'unite': 'kg',
-            'stock': 25,
+            'stock': 0,
             'nb_commandes': 8,  # Favori
         },
         {
             'reference': 'BOEUF001',
             'nom': 'Entrecôte',
             'description': 'Entrecôte de bœuf',
-            'categorie': 'Bœuf',
+            'categories': ['Bœuf'],
             'prix': 24.90,
             'unite': 'kg',
             'stock': 20,
@@ -85,17 +85,17 @@ def get_produits_client(client):
             'reference': 'BOEUF002',
             'nom': 'Faux-filet',
             'description': 'Faux-filet de bœuf persillé',
-            'categorie': 'Bœuf',
+            'categories': ['Bœuf'],
             'prix': 22.50,
             'unite': 'kg',
-            'stock': 15,
+            'stock': 0,
             'nb_commandes': 0,
         },
         {
             'reference': 'BOEUF003',
             'nom': 'Bavette',
             'description': 'Bavette de bœuf tendre',
-            'categorie': 'Bœuf',
+            'categories': ['Bœuf'],
             'prix': 18.90,
             'unite': 'kg',
             'stock': 25,
@@ -105,7 +105,7 @@ def get_produits_client(client):
             'reference': 'VOLAILLE001',
             'nom': 'Poulet fermier',
             'description': 'Poulet fermier entier Label Rouge',
-            'categorie': 'Volaille',
+            'categories': ['Volaille'],
             'prix': 9.80,
             'unite': 'kg',
             'stock': 40,
@@ -115,7 +115,7 @@ def get_produits_client(client):
             'reference': 'VOLAILLE003',
             'nom': 'Cuisses de poulet',
             'description': 'Cuisses de poulet fermier - Barquette de 4 pièces (environ 1,2 kg)',
-            'categorie': 'Volaille',
+            'categories': ['Volaille'],
             'prix': 7.90,
             'unite': 'barquette',
             'stock': 50,
@@ -126,17 +126,17 @@ def get_produits_client(client):
             'reference': 'VOLAILLE002',
             'nom': 'Cuisses de canard',
             'description': 'Cuisses de canard confites',
-            'categorie': 'Volaille',
+            'categories': ['Volaille'],
             'prix': 14.50,
             'unite': 'kg',
             'stock': 20,
-            'nb_commandes': 0,
+            'nb_commandes': 4,
         },
         {
             'reference': 'CHARC001',
             'nom': 'Jambon blanc',
             'description': 'Jambon blanc supérieur sans nitrite',
-            'categorie': 'Charcuterie',
+            'categories': ['Charcuterie'],
             'prix': 16.90,
             'unite': 'kg',
             'stock': 35,
@@ -146,7 +146,7 @@ def get_produits_client(client):
             'reference': 'CHARC002',
             'nom': 'Pâté de campagne',
             'description': 'Pâté de campagne artisanal',
-            'categorie': 'Charcuterie',
+            'categories': ['Charcuterie'],
             'prix': 11.50,
             'unite': 'kg',
             'stock': 30,
@@ -164,7 +164,10 @@ def get_categories_client(client):
     """
     # TODO: Implémenter selon votre source
     produits = get_produits_client(client)
-    categories = list(set(p.get('categorie', '') for p in produits if p.get('categorie')))
+    categories = set()
+    for p in produits:
+        for cat in p.get('categories', []):
+            categories.add(cat)
     return sorted(categories)
 
 

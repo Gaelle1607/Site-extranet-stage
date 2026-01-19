@@ -5,7 +5,7 @@
         <div class="row row-cols-1 row-cols-md-2 g-3">
             {% for produit in produits_favoris %}
             <div class="col">
-                <div class="card h-100 border-warning">
+                <div class="card h-100 produit-card{% if produit.stock is not None and not produit.stock %} produit-rupture{% endif %}">
                     <a href="{% url 'catalogue:detail' produit.reference %}" class="text-decoration-none">
                         <div class="card-body p-2">
                             <div class="d-flex align-items-center">
@@ -19,12 +19,16 @@
                                 <div class="flex-grow-1">
                                     <h6 class="mb-0 text-dark">{{ produit.nom }}</h6>
                                     <small class="text-primary fw-bold">{{ produit.prix|floatformat:2 }} € / {{ produit.unite }}</small>
+                                    {% if produit.stock is not None and not produit.stock %}
+                                    <span class="badge bg-danger ms-2">Rupture</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                     </a>
                     <div class="card-footer bg-white p-2">
-                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-2">
+                        {% if produit.stock is None or produit.stock > 0 %}
+                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-3">
                             {% csrf_token %}
                             <input type="hidden" name="reference" value="{{ produit.reference }}">
                             <div class="input-group input-group-sm">
@@ -34,8 +38,13 @@
                                 </button>
                             </div>
                         </form>
+                        {% else %}
+                        <div class="text-center text-muted small py-1">
+                            <i class="bi bi-x-circle"></i> Indisponible
+                        </div>
+                        {% endif %}
                     </div>
-                    
+
                 </div>
             </div>
             {% endfor %}
