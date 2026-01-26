@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'cote_client/base.html' %}
 {% block title %}Contact - Giffaud Groupe{% endblock %}
 
 {% block content %}
@@ -6,10 +6,10 @@
 <p class="text-muted mb-4">Pour toute question ou demande d'information, n'hésitez pas à nous contacter.</p>
 
 <div class="row">
-    <!-- Sites et coordonnées -->
+    <!-- Coordonnées sites -->
     <div class="col-md-8">
         <div class="row g-4">
-            <!-- Site des Epesses -->
+            <!-- Chaque site est une card avec nom + adresse + téléphone -->
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -29,7 +29,6 @@
                 </div>
             </div>
 
-            <!-- Site de Beaucouzé -->
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -44,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Site de Notre Dame d'Oe -->
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -59,7 +57,6 @@
                 </div>
             </div>
 
-            <!-- Charcuteries Sèches -->
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -76,23 +73,15 @@
         </div>
     </div>
 
-    <!-- Réseaux sociaux sur le côté -->
+    <!-- Réseaux sociaux -->
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-share"></i> Suivez-nous</h5>
-            </div>
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-share"></i> Suivez-nous</h5></div>
             <div class="card-body">
                 <div class="d-flex gap-3 justify-content-center">
-                    <a href="https://www.facebook.com/MaisonGiffaud" target="_blank" class="btn btn-outline-primary btn-lg">
-                        <i class="bi bi-facebook"></i>
-                    </a>
-                    <a href="https://www.linkedin.com/company/maison-giffaud" target="_blank" class="btn btn-outline-primary btn-lg">
-                        <i class="bi bi-linkedin"></i>
-                    </a>
-                    <a href="https://www.instagram.com/maison_giffaud" target="_blank" class="btn btn-outline-primary btn-lg">
-                        <i class="bi bi-instagram"></i>
-                    </a>
+                    <a href="https://www.facebook.com/MaisonGiffaud" target="_blank" class="btn btn-outline-primary btn-lg"><i class="bi bi-facebook"></i></a>
+                    <a href="https://www.linkedin.com/company/maison-giffaud" target="_blank" class="btn btn-outline-primary btn-lg"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://www.instagram.com/maison_giffaud" target="_blank" class="btn btn-outline-primary btn-lg"><i class="bi bi-instagram"></i></a>
                 </div>
             </div>
         </div>

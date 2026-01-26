@@ -1,0 +1,53 @@
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <nav class="col-2 col-md-3 col-lg-2 d-md-block sidebar py-3">
+            <ul class="nav flex-column">
+                <!-- Lien Accueil -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                       href="{% url 'administration:dashboard' %}">
+                        <i class="bi bi-house"></i>
+                        <span class="d-none d-md-inline ms-2">Accueil</span>
+                    </a>
+                </li>
+
+                <!-- Lien Clients -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'catalogue_clients' %}active{% endif %}"
+                       href="{% url 'administration:catalogue_clients' %}">
+                        <i class="bi bi-building"></i>
+                        <span class="d-none d-md-inline ms-2">Clients</span>
+                    </a>
+                </li>
+                <!-- Lien Utilisateur -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'catalogue_utilisateur' %}active{% endif %}"
+                       href="{% url 'administration:catalogue_utilisateur' %}">
+                        <i class="bi bi-person"></i>
+                        <span class="d-none d-md-inline ms-2">Utilisateurs</span>
+                    </a>
+                </li>
+
+                <!-- Lien Ajout Utilisateur -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'inscription' %}active{% endif %}"
+                       href="{% url 'administration:inscription' %}">
+                        <i class="bi bi-person-plus"></i>
+                        <span class="d-none d-md-inline ms-2">Inscription</span>
+                    </a>
+                </li>
+                <!-- Lien Commandes -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'liste_commande' %}active{% endif %}" 
+                       href="{% url 'administration:liste_commande' %}">
+                        <i class="bi bi-cart2"></i>
+                        <span class="d-none d-md-inline ms-2">Commandes</span>
+                    </a>
+                </li>
+
+                <!-- Bloc additionnel pour autres liens -->
+                {% block sidebar_extra %}{% endblock %}
+            </ul>
+        </nav>
+    

@@ -1,41 +1,38 @@
-{% extends 'base.html' %}
+{% extends 'cote_client/base.html' %}
 
-{% block title %}{{ produit.nom }} - Extranet B2B{% endblock %}
+{% block title %}{{ produit.nom }}{% endblock %}
 
 {% block content %}
+
+<!-- Fil d’ariane / breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}">Catalogue</a></li>
         {% if produit.categories %}
-        <li class="breadcrumb-item"><a href="{% url 'catalogue:liste' %}?categorie={{ produit.categories.0 }}">{{ produit.categories.0 }}</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'catalogue:liste' %}?categorie={{ produit.categories.0 }}">{{ produit.categories.0 }}</a>
+            </li>
         {% endif %}
         <li class="breadcrumb-item active">{{ produit.nom }}</li>
     </ol>
 </nav>
 
 <div class="row">
-    <div class="col-md-5">
-        {% if produit.image %}
-        <img src="{{ produit.image }}" class="img-fluid rounded" alt="{{ produit.nom }}">
-        {% else %}
-        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
-            <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
-        </div>
-        {% endif %}
-    </div>
-
     <div class="col-md-7">
+        <!-- Référence et nom -->
         <span class="text-muted">{{ produit.reference }}</span>
         <h1>{{ produit.nom }}</h1>
 
+        <!-- Catégories -->
         {% if produit.categories %}
         <div class="mb-3">
             {% for cat in produit.categories %}
-            <a href="{% url 'catalogue:liste' %}?categorie={{ cat }}" class="badge bg-secondary text-decoration-none">{{ cat }}</a>
+                <a href="{% url 'catalogue:liste' %}?categorie={{ cat }}" class="badge bg-secondary text-decoration-none">{{ cat }}</a>
             {% endfor %}
         </div>
         {% endif %}
 
+        <!-- Carte prix et stock -->
         <div class="card bg-light mb-4">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -43,15 +40,17 @@
                         <span class="h2 text-primary">{{ produit.prix|floatformat:2 }} €</span>
                         <span class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</span>
                     </div>
+
+                    <!-- Badge stock -->
                     {% if produit.stock is not None or produit.stock > 0 %}
                     <div class="col-auto">
                         <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
                             {% if produit.stock == 1 %}
-                            <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }}  {{produit.unite}}
+                                <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }} {{ produit.unite }}
                             {% elif produit.stock > 1 %}
-                            <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }}  {{produit.unite}}s
+                                <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }} {{ produit.unite }}s
                             {% else %}
-                            <i class="bi bi-x-circle"></i> Rupture de stock
+                                <i class="bi bi-x-circle"></i> Rupture de stock
                             {% endif %}
                         </span>
                     </div>
@@ -60,13 +59,16 @@
             </div>
         </div>
 
+        <!-- Formulaire ajout au panier si disponible -->
         {% if produit.stock is None or produit.stock > 0 %}
         <form method="post" action="{% url 'commandes:ajouter' %}" class="mb-4 ajouter-panier-form">
             {% csrf_token %}
             <input type="hidden" name="reference" value="{{ produit.reference }}">
             <div class="row g-2">
                 <div class="col-auto">
-                    <input type="number" name="quantite" value="1" min="1" {% if produit.stock %}max="{{ produit.stock }}"{% endif %} class="form-control" style="width: 100px;">
+                    <input type="number" name="quantite" value="1" min="1"
+                        {% if produit.stock %}max="{{ produit.stock }}"{% endif %}
+                        class="form-control" style="width: 100px;">
                 </div>
                 <div class="col">
                     <button type="submit" class="btn btn-primary btn-lg">
@@ -81,10 +83,12 @@
         </div>
         {% endif %}
 
+        <!-- Description du produit -->
         {% if produit.description %}
         <h5>Description</h5>
         <p>{{ produit.description|linebreaks }}</p>
         {% endif %}
     </div>
 </div>
+
 {% endblock %}

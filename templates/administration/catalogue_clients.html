@@ -3,43 +3,48 @@
 {% block title %}Catalogue Clients{% endblock %}
 
 {% block content %}
-
+<!-- Formulaire de recherche -->
 <form method="get" class="d-flex gap-2 mb-3">
-    <input type="text" name="q" class="form-control" placeholder="Rechercher par nom" value="{{ query }}">
+    <input type="text" name="q" class="form-control" placeholder="Rechercher par nom ou code tiers" value="{{ query }}">
     <button type="submit" class="btn btn-primary">Rechercher</button>
+
+    <!-- Bouton Effacer affiché uniquement si une recherche est active -->
     {% if query %}
-    <a href="{% url 'administration:catalogue_client' %}" class="btn btn-outline-secondary d-flex align-items-center">Effacer</a>
+        <a href="{% url 'administration:catalogue_clients' %}" class="btn btn-outline-secondary d-flex align-items-center">Effacer</a>
     {% endif %}
 </form>
 
+<!-- Carte principale contenant la liste des clients -->
 <div class="card card-container">
     <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-people"></i> Liste des Clients</h5>
+        <h5 class="mb-0"><i class="bi bi-building"></i> Liste des Clients </h5>
     </div>
     <div class="card-body">
         {% if clients %}
-        <div class="row">
-            {% for client in clients %}
-            <div class="col-md-3 mb-4">
-                <a href="{% url 'administration:cadencier_client' client.id %}" class="card-link">
-                    <div class="card h-100 client-card">
-                        <div class="card-body text-center">
-                            <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
-                            <h6 class="card-title mb-1">{{ client.nom }}</h6>
-                            <small class="text-muted">autre information</small>
+            <div class="row">
+                {% for client in clients %}
+                    <!-- Carte individuelle par client -->
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 client-card">
+                            <div class="card-body text-center">
+                                <i class="bi bi-building fs-1 text-success mb-2"></i>
+                                <h6 class="card-title mb-1">{{ client.nom }}</h6>
+                                <small class="text-muted">{{ client.tiers }}</small>
+                                {% if client.acheminement %}
+                                    <p class="mb-0 mt-2 small text-secondary">{{ client.acheminement }}</p>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </a>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-info-circle fs-1 text-muted"></i>
-            <p class="mt-3 mb-0">Aucun client trouvé.</p>
-        </div>
+            <!-- Message si aucun client trouvé -->
+            <div class="text-center py-5">
+                <i class="bi bi-info-circle fs-1 text-muted"></i>
+                <p class="mt-3 mb-0">Aucun client trouvé.</p>
+            </div>
         {% endif %}
     </div>
 </div>
-
 {% endblock %}

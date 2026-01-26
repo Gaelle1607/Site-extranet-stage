@@ -1,32 +1,32 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Client
+from .models import Utilisateur
 
 
-class ClientInline(admin.StackedInline):
-    model = Client
+class UtilisateurInline(admin.StackedInline):
+    model = Utilisateur
     can_delete = False
-    verbose_name = 'Profil client'
+    verbose_name = 'Profil utilisateur'
 
 
 class UserAdmin(BaseUserAdmin):
-    inlines = (ClientInline,)
-    list_display = ('username', 'get_nom', 'is_active')
+    inlines = (UtilisateurInline,)
+    list_display = ('username', 'get_code_tiers', 'is_active')
 
-    def get_nom(self, obj):
-        if hasattr(obj, 'client'):
-            return obj.client.nom
+    def get_code_tiers(self, obj):
+        if hasattr(obj, 'utilisateur'):
+            return obj.utilisateur.code_tiers
         return '-'
-    get_nom.short_description = 'Nom'
+    get_code_tiers.short_description = 'Code tiers'
 
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
-@admin.register(Client)
-class ClientAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'user', 'actif')
+@admin.register(Utilisateur)
+class UtilisateurAdmin(admin.ModelAdmin):
+    list_display = ('code_tiers', 'user', 'actif')
     list_filter = ('actif',)
-    search_fields = ('nom', 'user__username')
+    search_fields = ('code_tiers', 'user__username')

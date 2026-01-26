@@ -1,0 +1,88 @@
+{% extends 'cote_client/base.html' %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Menu latéral -->
+    {% include "cote_client/clients/menu_profil.html" %}
+
+    <!-- Contenu principal : informations du profil -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person"></i> Informations de profil
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+
+                    <!-- Informations personnelles -->
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">
+                            Informations personnelles
+                        </h6>
+
+                        <p class="mb-2">
+                            <strong>Nom :</strong><br>
+                            {{ client.nom }}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Nom d'utilisateur :</strong><br>
+                            {{ user.username }}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Complément :</strong><br>
+                            {{ client.complement|default:"Non renseigné" }}
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>Adresse :</strong><br>
+                            {{ client.adresse|default:"Non renseigné" }}
+                        </p>
+
+                        <p>
+                            <strong>Code Postal :</strong><br>
+                            {{ client.cp|default:"Non renseigné" }}
+                        </p>
+
+                        <p>
+                            <strong>Ville :</strong><br>
+                            {{ client.acheminement|default:"Non renseigné"}}
+                        </p>
+                    </div>
+
+                    <!-- Informations client -->
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">
+                            Informations client
+                        </h6>
+
+                        <p class="mb-2">
+                            <strong>Code client :</strong><br>
+                            {{ client.code_client|default:"N/A" }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <hr class="my-4">
+
+                <a href="{% url 'clients:modifier_mot_de_passe' %}"
+                   class="btn btn-primary">
+                    <i class="bi bi-key"></i> Modifier mon mot de passe
+                </a>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

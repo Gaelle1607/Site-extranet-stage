@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Notification de succès
                     showNotification(data.message, 'success');
+                } else {
+                    // Notification d'erreur (stock insuffisant, etc.)
+                    showNotification(data.message, 'warning');
                 }
             })
             .catch(error => {
@@ -60,12 +63,28 @@ document.addEventListener('DOMContentLoaded', function() {
         let timeout;
         input.addEventListener('change', function() {
             clearTimeout(timeout);
+
             timeout = setTimeout(() => {
                 const form = input.closest('form');
+
+                // Récupérer le stock max depuis l'attribut data-stock de l'input
+                const stockMax = input.dataset.stock ? parseInt(input.dataset.stock) : Infinity;
+
+                let quantiteSaisie = parseInt(input.value);
+
+                // Vérifier si la quantité dépasse le stock
+                if (stockMax !== Infinity && quantiteSaisie > stockMax) {
+                    quantiteSaisie = stockMax;
+                    input.value = stockMax;
+                    showNotification('Quantité maximale disponible : ' + stockMax, 'warning');
+                }
+
+                // Soumettre le formulaire avec la quantité corrigée
                 submitQuantiteForm(form);
             }, 500);
         });
     });
+
 
     // Suppression du panier (page panier)
     document.querySelectorAll('.supprimer-ligne-form').forEach(function(form) {
@@ -206,20 +225,22 @@ function updateRecapPanier(lignes, total) {
         lignes.forEach(ligne => {
             html += `
                 <div class="list-group-item px-0">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div class="flex-grow-1">
                             <small class="fw-bold">${ligne.nom}</small>
                             <br>
                             <small class="text-muted">${ligne.quantite} x ${ligne.prix.toFixed(2)} €</small>
                         </div>
-                        <span class="badge recap-prix-badge me-2">${ligne.total.toFixed(2)} €</span>
-                        <form method="post" action="/commandes/panier/supprimer/" class="supprimer-recap-form">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
-                            <input type="hidden" name="reference" value="${ligne.reference}">
-                            <button type="submit" class="btn btn-link text-danger p-0" title="Supprimer">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                        <div class="d-flex flex-column align-items-center">
+                            <span class="badge btn-success" style="white-space: nowrap; pointer-events: none;">${ligne.total.toFixed(2)} €</span>
+                            <form method="post" action="/commandes/panier/supprimer/" class="supprimer-recap-form" style="margin: 0;">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
+                                <input type="hidden" name="reference" value="${ligne.reference}">
+                                <button type="submit" class="btn btn-link text-danger p-0 mt-1" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             `;
@@ -227,7 +248,7 @@ function updateRecapPanier(lignes, total) {
         html += '</div>';
         html += '<hr>';
         html += `
-            <div class="d-flex justify-content-between mb-3">
+            <div class="d-flex flex-row flex-md-column flex-lg-row justify-content-between align-items-center mb-3">
                 <span class="fw-bold">Total HT</span>
                 <span class="fw-bold h5 mb-0">${total.toFixed(2)} €</span>
             </div>
@@ -314,7 +335,20 @@ function attachSupprimerRecapListeners() {
     });
 }
 
+/**
+ * showNotification
+ * Affiche une notification toast sur la page
+ * @param {string} message - Message à afficher
+ * @param {string} type - Type d'alerte : success, danger, etc.
+ */
+
 function showNotification(message, type) {
+    //Vérifie si une notification est déjà affichécation existe déjà et la supprime
+    const existingAlert = document.querySelector('.alert.position-fixed');
+    if (existingAlert){
+        existingAlert.remove();
+    }
+    
     // Créer une notification toast
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;

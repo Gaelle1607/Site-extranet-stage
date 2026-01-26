@@ -280,6 +280,10 @@ h1, h2, h3, h4, h5, h6,
     color: var(--giffaud-noir) !important;
 }
 
+.prix_supprimer{
+    display: flex;
+    align-items: center;
+}
 /* Formulaires */
 .form-control,
 .form-select {
@@ -340,6 +344,16 @@ h1, h2, h3, h4, h5, h6,
     width: 80px !important;
     text-align: center;
     border-radius: 0 !important;
+}
+
+/* Liens dans le panier */
+.table a {
+    text-decoration: none;
+    color: var(--giffaud-noir);
+}
+
+.table a:hover {
+    color: var(--giffaud-accent);
 }
 
 /* Footer */
@@ -542,4 +556,117 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--giffaud-noir-light);
+}
+
+/* ===== Page Passage Commande ===== */
+.passage-commande-container {
+    background-color: var(--giffaud-blanc);
+    border-radius: 0;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.passage-commande-container:hover {
+    transform: none;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+}
+
+.passage-commande-header {
+    border-bottom: 2px solid var(--giffaud-accent);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.passage-commande-header h2 {
+    color: var(--giffaud-noir);
+    margin-bottom: 0;
+}
+
+.passage-commande-header h2 i {
+    color: var(--giffaud-accent);
+    margin-right: 0.5rem;
+}
+
+/* Section informations client */
+.info-client-section {
+    background-color: var(--giffaud-gris-clair);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--giffaud-accent);
+}
+
+.info-client-section .form-control[readonly] {
+    background-color: var(--giffaud-blanc);
+    font-weight: 500;
+}
+
+/* Section produits */
+.produits-commande-section {
+    margin-top: 2rem;
+}
+
+.produits-commande-section h4 {
+    font-family: var(--font-heading);
+    color: var(--giffaud-noir);
+    border-bottom: 2px solid var(--giffaud-gris-clair);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.produit-ligne {
+    background-color: var(--giffaud-blanc);
+    border: 1px solid #eee;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.produit-ligne:hover {
+    background-color: var(--giffaud-gris-clair);
+    border-color: var(--giffaud-accent);
+}
+
+.produit-ligne span {
+    font-weight: 500;
+    color: var(--giffaud-noir);
+}
+
+.produit-ligne .form-control {
+    border: 2px solid #ddd;
+    font-weight: 600;
+    text-align: center;
+}
+
+.produit-ligne .form-control:focus {
+    border-color: var(--giffaud-accent);
+    box-shadow: 0 0 0 0.2rem rgba(200, 164, 92, 0.25);
+}
+
+/* Bouton validation */
+.btn-valider-commande {
+    background-color: var(--giffaud-accent);
+    border-color: var(--giffaud-accent);
+    color: var(--giffaud-noir);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+}
+
+.btn-valider-commande:hover {
+    background-color: var(--giffaud-noir);
+    border-color: var(--giffaud-noir);
+    color: var(--giffaud-blanc);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-valider-commande i {
+    margin-right: 0.5rem;
 }

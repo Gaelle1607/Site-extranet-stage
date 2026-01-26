@@ -1,0 +1,197 @@
+{% extends 'cote_client/base.html' %}
+
+{% block title %}Commander{% endblock %}
+
+{% block content %}
+<div class="passage-commande-container">
+    <!-- En-tête -->
+    <div class="passage-commande-header">
+        <h2><i class="bi bi-file-earmark-text"></i> Passer commande</h2>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Section informations client -->
+        <div class="info-client-section">
+            <div class="row gx-5 gy-3">
+                {% comment %} Chaque champ est en lecture seule sauf la date de livraison {% endcomment %}
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-building me-2"></i>Nom du client :
+                        </label>
+                        <div class="col-7">
+                            <input type="text" value="{{ client.nom }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-info-circle me-2"></i>Complément :
+                        </label>
+                        <div class="col-7">
+                            <input type="text" value="{{ client.complement }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-geo-alt me-2"></i>Adresse :
+                        </label>
+                        <div class="col-7">
+                            <input type="text" value="{{ client.adresse }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-mailbox me-2"></i>Code postal :
+                        </label>
+                        <div class="col-7">
+                            <input type="text" value="{{ client.code_postal }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-pin-map me-2"></i>Ville :
+                        </label>
+                        <div class="col-7">
+                            <input type="text" value="{{ client.acheminement }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="row align-items-center">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-calendar-event me-2"></i>Date de livraison :
+                        </label>
+                        <div class="col-7">
+                            <input type="date" id="date-livraison" name="date_livraison" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section produits -->
+        <div class="produits-commande-section mt-4">
+            <h4><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
+
+            {% if produits %}
+                {% for produit in produits %}
+                <div class="produit-ligne d-flex justify-content-between align-items-center mb-2">
+                    <!-- Nom produit -->
+                    <span class="produit-nom flex-grow-1">{{ produit.nom }}</span>
+
+                    {% if produit.stock is None or produit.stock > 0 %}
+                        <!-- Prix unitaire -->
+                        <span class="produit-prix-unitaire me-3 text-end" style="width: 200px;">
+                            <strong>{{ produit.prix|floatformat:2 }}</strong> €/HT/{{ produit.unite }}
+                        </span>
+
+                        <!-- Quantité -->
+                        <input type="number"
+                               name="qte_{{ produit.reference }}"
+                               min="0"
+                               value="0"
+                               max="{{ produit.stock }}"
+                               data-prix="{{ produit.prix }}"
+                               class="form-control form-control-sm quantite-commande-input me-3"
+                               style="width: 80px;">
+
+                        <!-- Sous-total ligne -->
+                        <span class="sous-total-ligne fw-bold text-end" style="width: 100px;">0.00 €</span>
+                    {% else %}
+                        <!-- Produit indisponible -->
+                        <span class="text-muted fw-bold text-center" style="width: 280px;">
+                            <i class="bi bi-x-circle me-1"></i> Indisponible
+                        </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Total général -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <span class="fw-bold h5 mb-0">
+                        Total produits : <span id="total-quantite">0</span> articles
+                    </span>
+                    <div>
+                        <span class="fw-bold h5 me-3">Total HT :</span>
+                        <span class="fw-bold h4 mb-0" id="total-commande">0.00 €</span>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>Aucun produit disponible.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Commentaires / instructions -->
+        <div class="commentaire-section mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-chat-text me-2"></i> Commentaires / Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <textarea name="commentaires" class="form-control" rows="3" placeholder="Ajoutez vos instructions..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton valider la commande -->
+        <button type="submit" class="btn btn-valider-commande w-100 mt-4">
+            <i class="bi bi-check2-circle"></i> Valider la commande
+        </button>
+    </form>
+</div>
+
+<!-- Script dynamique pour calcul du total et date minimum -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Date de livraison minimum (aujourd'hui + 7 jours)
+    const dateLivraison = document.getElementById('date-livraison');
+    const today = new Date();
+    today.setDate(today.getDate() + 7);
+    const minDate = today.toISOString().split('T')[0];
+    dateLivraison.min = minDate;
+    dateLivraison.value = minDate;
+
+    // Calcul des totaux
+    const inputs = document.querySelectorAll('.quantite-commande-input');
+
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            const prix = parseFloat(input.dataset.prix) || 0;
+            const quantite = parseInt(input.value) || 0;
+            const ligneSousTotal = input.closest('.produit-ligne').querySelector('.sous-total-ligne');
+            ligneSousTotal.textContent = (prix * quantite).toFixed(2) + ' €';
+            calculerTotal();
+        });
+    });
+
+    function calculerTotal() {
+        let totalPrix = 0, totalQuantite = 0;
+        inputs.forEach(input => {
+            const prix = parseFloat(input.dataset.prix) || 0;
+            const quantite = parseInt(input.value) || 0;
+            totalPrix += prix * quantite;
+            totalQuantite += quantite;
+        });
+        document.getElementById('total-commande').textContent = totalPrix.toFixed(2) + ' €';
+        document.getElementById('total-quantite').textContent = totalQuantite;
+    }
+});
+</script>
+{% endblock %}

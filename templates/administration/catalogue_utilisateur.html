@@ -1,0 +1,52 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Catalogue Clients{% endblock %}
+
+{% block content %}
+<!-- Formulaire de recherche -->
+<form method="get" class="d-flex gap-2 mb-3">
+    <input type="text" name="q" class="form-control" placeholder="Rechercher par nom" value="{{ query }}">
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+
+    <!-- Bouton Effacer affiché uniquement si une recherche est active -->
+    {% if query %}
+        <a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary d-flex align-items-center">Effacer</a>
+    {% endif %}
+</form>
+
+<!-- Carte principale contenant la liste des clients -->
+<div class="card card-container">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-person"></i> Liste des Clients</h5>
+    </div>
+    <div class="card-body">
+        {% if clients %}
+            <div class="row">
+                {% for client in clients %}
+                    <!-- Carte individuelle par client -->
+                    <div class="col-md-3 mb-4">
+                        <a href="{% url 'administration:cadencier_client' client.id %}" class="card-link">
+                            <div class="card h-100 client-card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
+                                    <h6 class="card-title mb-1">{{ client.nom }}</h6>
+                                    <small class="text-muted">{{ client.code_tiers }}</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Message si aucun client trouvé -->
+            <div class="text-center py-5">
+                <i class="bi bi-person-x fs-1 text-muted mb-3"></i>
+                <p class="text-muted mb-3">Aucun utilisateur inscrit pour le moment</p>
+                <a href="{% url 'administration:inscription' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Inscrire un nouveau client
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

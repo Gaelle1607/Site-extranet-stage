@@ -1,70 +1,92 @@
-{% extends 'base.html' %}
+{% extends 'cote_client/base.html' %}
 
-{% block title %}Commande {{ commande.numero }} - Extranet B2B{% endblock %}
+{% block title %}Commande {{ commande.numero }}{% endblock %}
 
 {% block content %}
+
+<!-- Bouton retour vers l'historique -->
 <div class="mb-4">
-    <a href="{% url 'commandes:historique' %}" class="btn btn-outline-primary btn-sm">
+    <a href="{% url 'commandes:historique' %}"
+       class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left"></i> Retour à l'historique
     </a>
 </div>
 
 <div class="row">
+
+    <!-- Détail de la commande -->
     <div class="col-md-8">
         <div class="card mb-4">
+
+            <!-- En-tête : numéro + statut -->
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-receipt"></i> Commande {{ commande.numero }}</h5>
-                {% if commande.statut == 'en_attente' %}
-                <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'confirmee' %}
-                <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'en_preparation' %}
-                <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'expediee' %}
-                <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'livree' %}
-                <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'annulee' %}
-                <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
+                <h5 class="mb-0">
+                    <i class="bi bi-receipt"></i> Commande {{ commande.numero }}
+                </h5>
+
+                <!-- Statut de la commande -->
+                {% if commande.statut %}
+                <span class="badge
+                    {% if commande.statut == 'en_attente' %}bg-warning text-dark
+                    {% elif commande.statut == 'confirmee' %}bg-info
+                    {% elif commande.statut == 'en_preparation' %}bg-primary
+                    {% elif commande.statut == 'expediee' %}bg-info
+                    {% elif commande.statut == 'livree' %}bg-success
+                    {% elif commande.statut == 'annulee' %}bg-danger
+                    {% endif %}">
+                    {{ commande.get_statut_display }}
+                </span>
                 {% endif %}
             </div>
+
+            <!-- Tableau des lignes de commande -->
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Produit</th>
-                            <th class="text-center" style="width: 100px;">Quantité</th>
-                            <th class="text-end" style="width: 120px;">Prix unit.</th>
-                            <th class="text-end" style="width: 120px;">Total</th>
+                            <th class="text-center" style="width:100px;">Qté</th>
+                            <th class="text-end" style="width:120px;">Prix unit.</th>
+                            <th class="text-end" style="width:120px;">Total</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for ligne in commande.lignes.all %}
                         <tr>
                             <td>
-                                <strong>{{ ligne.nom_produit }}</strong>
-                                <br><small class="text-muted">{{ ligne.reference_produit }}</small>
+                                <strong>{{ ligne.nom_produit }}</strong><br>
+                                <small class="text-muted">{{ ligne.reference_produit }}</small>
                             </td>
                             <td class="text-center">{{ ligne.quantite }}</td>
                             <td class="text-end">{{ ligne.prix_unitaire|floatformat:2 }} €</td>
-                            <td class="text-end fw-bold">{{ ligne.total_ligne|floatformat:2 }} €</td>
+                            <td class="text-end fw-bold">
+                                {{ ligne.total_ligne|floatformat:2 }} €
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
+
+                    <!-- Total commande -->
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="3" class="text-end fw-bold">Total HT</td>
-                            <td class="text-end fw-bold h5 mb-0">{{ commande.total_ht|floatformat:2 }} €</td>
+                            <td class="text-end fw-bold h5 mb-0">
+                                {{ commande.total_ht|floatformat:2 }} €
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
 
+        <!-- Commentaire éventuel -->
         {% if commande.commentaire %}
         <div class="card">
             <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-chat-text"></i> Commentaire</h6>
+                <h6 class="mb-0">
+                    <i class="bi bi-chat-text"></i> Commentaire
+                </h6>
             </div>
             <div class="card-body">
                 <p class="mb-0">{{ commande.commentaire }}</p>
@@ -73,14 +95,17 @@
         {% endif %}
     </div>
 
+    <!-- Informations complémentaires -->
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h6>
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Informations
+                </h6>
             </div>
             <div class="card-body">
                 <p class="mb-2">
-                    <strong>Date de commande :</strong><br>
+                    <strong>Date :</strong><br>
                     {{ commande.date_commande|date:"d/m/Y à H:i" }}
                 </p>
                 <p class="mb-2">
@@ -92,11 +117,12 @@
                     {{ commande.client.societe }}
                 </p>
                 <p class="mb-0">
-                    <strong>Nombre d'articles :</strong><br>
+                    <strong>Articles :</strong><br>
                     {{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}
                 </p>
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}

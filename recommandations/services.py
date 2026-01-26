@@ -10,42 +10,42 @@ from .models import HistoriqueAchat, PreferenceCategorie
 from catalogue.services import get_produits_client, get_produit_by_reference
 
 
-def obtenir_produits_favoris(client, limite=4):
+def obtenir_produits_favoris(utilisateur, limite=4):
     """
-    Retourne les produits les plus commandés par le client.
+    Retourne les produits les plus commandés par l'utilisateur.
 
     Args:
-        client: Instance Client
+        utilisateur: Instance Utilisateur
         limite: Nombre de produits à retourner
 
     Returns:
         Liste de dictionnaires produit
     """
-    # Récupérer l'historique des achats du client
+    # Récupérer l'historique des achats de l'utilisateur
     historique = HistoriqueAchat.objects.filter(
-        client=client
+        utilisateur=utilisateur
     ).order_by('-nombre_commandes', '-quantite_totale')[:limite]
 
     produits_favoris = []
     for h in historique:
-        produit = get_produit_by_reference(client, h.reference_produit)
+        produit = get_produit_by_reference(utilisateur, h.reference_produit)
         if produit:
             produits_favoris.append(produit)
 
     return produits_favoris
 
 
-def obtenir_recommandations(client, limite=8):
+def obtenir_recommandations(utilisateur, limite=8):
     """
-    Obtient les recommandations personnalisées pour un client.
+    Obtient les recommandations personnalisées pour un utilisateur.
 
     Algorithme:
-    1. Produits fréquemment achetés par le client
+    1. Produits fréquemment achetés par l'utilisateur
     2. Produits de ses catégories préférées
     3. Produits populaires globalement
 
     Args:
-        client: Instance Client
+        utilisateur: Instance Utilisateur
         limite: Nombre de recommandations à retourner
 
     Returns:
@@ -55,7 +55,7 @@ def obtenir_recommandations(client, limite=8):
     refs_exclus = set()
 
     # 1. Produits régulièrement achetés (réassort)
-    produits_reguliers = obtenir_produits_favoris(client, limite=4)
+    produits_reguliers = obtenir_produits_favoris(utilisateur, limite=4)
     for p in produits_reguliers:
         if p['reference'] not in refs_exclus:
             recommandations.append(p)
@@ -63,7 +63,7 @@ def obtenir_recommandations(client, limite=8):
 
     # 2. Produits des catégories préférées
     if len(recommandations) < limite:
-        produits_categories = obtenir_produits_categories_preferees(client, refs_exclus, limite=4)
+        produits_categories = obtenir_produits_categories_preferees(utilisateur, refs_exclus, limite=4)
         for p in produits_categories:
             if p['reference'] not in refs_exclus and len(recommandations) < limite:
                 recommandations.append(p)
@@ -71,7 +71,7 @@ def obtenir_recommandations(client, limite=8):
 
     # 3. Compléter avec d'autres produits disponibles
     if len(recommandations) < limite:
-        tous_produits = get_produits_client(client)
+        tous_produits = get_produits_client(utilisateur)
         for p in tous_produits:
             if p['reference'] not in refs_exclus and len(recommandations) < limite:
                 recommandations.append(p)
@@ -80,13 +80,13 @@ def obtenir_recommandations(client, limite=8):
     return recommandations[:limite]
 
 
-def obtenir_produits_categories_preferees(client, refs_exclus, limite=4):
+def obtenir_produits_categories_preferees(utilisateur, refs_exclus, limite=4):
     """
-    Retourne des produits des catégories préférées du client.
+    Retourne des produits des catégories préférées de l'utilisateur.
     """
     # Identifier les catégories préférées
     categories_preferees = HistoriqueAchat.objects.filter(
-        client=client
+        utilisateur=utilisateur
     ).exclude(categorie='').values('categorie').annotate(
         total=Sum('quantite_totale')
     ).order_by('-total')[:3]
@@ -97,7 +97,7 @@ def obtenir_produits_categories_preferees(client, refs_exclus, limite=4):
         return []
 
     # Récupérer tous les produits et filtrer par catégorie
-    tous_produits = get_produits_client(client)
+    tous_produits = get_produits_client(utilisateur)
     produits = []
     for p in tous_produits:
         # Vérifier si au moins une catégorie du produit est dans les catégories préférées
@@ -110,12 +110,12 @@ def obtenir_produits_categories_preferees(client, refs_exclus, limite=4):
     return produits
 
 
-def mettre_a_jour_historique_commande(client, lignes_panier):
+def mettre_a_jour_historique_commande(utilisateur, lignes_panier):
     """
     Met à jour l'historique des achats après une commande.
 
     Args:
-        client: Instance Client
+        utilisateur: Instance Utilisateur
         lignes_panier: Liste de dict avec 'reference', 'quantite', 'produit'
     """
     for ligne in lignes_panier:
@@ -124,20 +124,20 @@ def mettre_a_jour_historique_commande(client, lignes_panier):
         categories = produit.get('categories', [])
         categorie = categories[0] if categories else ''
         HistoriqueAchat.enregistrer_achat(
-            client=client,
+            utilisateur=utilisateur,
             reference_produit=ligne['reference'],
             quantite=ligne['quantite'],
             categorie=categorie
         )
 
 
-def calculer_preferences_categories(client):
+def calculer_preferences_categories(utilisateur):
     """
-    Calcule et met à jour les préférences de catégories pour un client.
+    Calcule et met à jour les préférences de catégories pour un utilisateur.
     """
     # Calculer les scores par catégorie
     stats = HistoriqueAchat.objects.filter(
-        client=client
+        utilisateur=utilisateur
     ).exclude(categorie='').values('categorie').annotate(
         total_quantite=Sum('quantite_totale'),
         nb_produits=Count('reference_produit', distinct=True)
@@ -147,7 +147,7 @@ def calculer_preferences_categories(client):
     for stat in stats:
         score = stat['total_quantite'] * stat['nb_produits']
         PreferenceCategorie.objects.update_or_create(
-            client=client,
+            utilisateur=utilisateur,
             categorie=stat['categorie'],
             defaults={'score': score}
         )

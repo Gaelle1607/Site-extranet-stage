@@ -1,0 +1,133 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block content %}
+<!-- Inscription d'un utilisateur-->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-person-plus"></i> Inscription d'un utilisateur</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="client-search" class="form-label">Nom de l'entreprise</label>
+                <input type="text" class="form-control" id="client-search" placeholder="Tapez au moins 2 caractères pour rechercher du nom, de la ville ou du tiers" autocomplete="off">
+                <input type="hidden" id="client" name="client" required>
+                <div id="search-results" class="list-group mt-1" style="position: absolute; z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
+                <small class="text-muted">Recherchez et sélectionnez le client</small>
+                <div id="selected-client" class="mt-2"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Nom d'utilisateur</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Mot de passe</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password_confirm" class="form-label">Confirmer le mot de passe</label>
+                <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Créer l'utilisateur
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Inscription d'un administrateur-->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-shield-plus"></i> Inscription d'un administrateur</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="admin">
+
+            <div class="mb-3">
+                <label for="admin_username" class="form-label">Nom d'administrateur</label>
+                <input type="text" class="form-control" id="admin_username" name="admin_username" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="admin_password" class="form-label">Mot de passe</label>
+                <input type="password" class="form-control" id="admin_password" name="admin_password" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="admin_password_confirm" class="form-label">Confirmer le mot de passe</label>
+                <input type="password" class="form-control" id="admin_password_confirm" name="admin_password_confirm" required>
+            </div>
+
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-shield-plus"></i> Créer l'administrateur
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('client-search');
+    const hiddenInput = document.getElementById('client');
+    const resultsDiv = document.getElementById('search-results');
+    const selectedDiv = document.getElementById('selected-client');
+    let debounceTimer;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+
+        if (query.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`{% url 'administration:recherche_clients_api' %}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if (data.clients.length === 0) {
+                        resultsDiv.innerHTML = '<div class="list-group-item text-muted">Aucun client trouvé</div>';
+                        return;
+                    }
+                    data.clients.forEach(client => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.innerHTML = `<strong>${client.nom}</strong> <small class="text-muted">(${client.tiers})</small>`;
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            hiddenInput.value = client.tiers;
+                            searchInput.value = client.nom;
+                            selectedDiv.innerHTML = `<span class="badge bg-success"><i class="bi bi-check"></i> ${client.nom} (${client.tiers})</span>`;
+                            resultsDiv.innerHTML = '';
+                        });
+                        resultsDiv.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    resultsDiv.innerHTML = '<div class="list-group-item text-danger">Erreur de recherche</div>';
+                });
+        }, 300);
+    });
+
+    // Fermer les résultats si on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.innerHTML = '';
+        }
+    });
+});
+</script>
+{% endblock %}

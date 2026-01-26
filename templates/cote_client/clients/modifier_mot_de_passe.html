@@ -1,0 +1,94 @@
+{% extends 'cote_client/base.html' %}
+
+{% block title %}Modifier mot de passe{% endblock %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Menu latéral -->
+    {% include "cote_client/clients/menu_profil.html" %}
+
+    <!-- Contenu principal : formulaire de modification -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-key"></i> Modifier mon mot de passe
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Mot de passe actuel -->
+                    <div class="mb-3">
+                        <label for="id_old_password" class="form-label">
+                            Mot de passe actuel
+                        </label>
+                        <input type="password"
+                               name="old_password"
+                               id="id_old_password"
+                               class="form-control {% if form.old_password.errors %}is-invalid{% endif %}"
+                               required>
+                        {% if form.old_password.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.old_password.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Nouveau mot de passe -->
+                    <div class="mb-3">
+                        <label for="id_new_password1" class="form-label">
+                            Nouveau mot de passe
+                        </label>
+                        <input type="password"
+                               name="new_password1"
+                               id="id_new_password1"
+                               class="form-control {% if form.new_password1.errors %}is-invalid{% endif %}"
+                               required>
+                        {% if form.new_password1.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.new_password1.errors.0 }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Le mot de passe doit contenir au moins 8 caractères.
+                        </div>
+                    </div>
+
+                    <!-- Confirmation -->
+                    <div class="mb-4">
+                        <label for="id_new_password2" class="form-label">
+                            Confirmer le nouveau mot de passe
+                        </label>
+                        <input type="password"
+                               name="new_password2"
+                               id="id_new_password2"
+                               class="form-control {% if form.new_password2.errors %}is-invalid{% endif %}"
+                               required>
+                        {% if form.new_password2.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.new_password2.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'clients:profil' %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

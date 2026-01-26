@@ -1,0 +1,33 @@
+<!-- Navbar principale de l'administration -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <!-- Logo / nom de l'administration -->
+        <a class="navbar-brand" href="{% url 'administration:dashboard' %}">
+            <i class="bi bi-gear-fill"></i> GIFFAUD ADMIN
+        </a>
+
+        <!-- Bouton pour menu responsive -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarAdmin">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Liens de navigation (collapsables sur mobile) -->
+        <div class="collapse navbar-collapse" id="navbarAdmin">
+            <ul class="navbar-nav ms-auto">
+                <!-- Nom de l'utilisateur -->
+                <li class="nav-item">
+                    <span class="nav-link nav-nom">
+                        <i class="bi bi-person-circle"></i> {{ user.username }}
+                    </span>
+                </li>
+
+                <!-- Bouton Déconnexion -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'clients:deconnexion' %}">
+                        <i class="bi bi-box-arrow-right"></i> Déconnexion
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

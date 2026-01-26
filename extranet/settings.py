@@ -57,13 +57,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'extranet.wsgi.application'
 
-# Base de données SQLite (seulement pour les utilisateurs)
+# Base de données SQLite (utilisateurs, commandes locales)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    # Base de données MariaDB distante (clients, produits, catalogue)
+    'logigvd': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'logigvd',
+        'USER': 'tlm',
+        'PASSWORD': 'mlt06',
+        'HOST': '192.168.116.10',
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
+
+DATABASE_ROUTERS = ['extranet.db_router.DatabaseRouter']
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

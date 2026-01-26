@@ -1,0 +1,72 @@
+{% extends 'cote_client/base.html' %}
+{% block title %}Mentions Légales - Giffaud Groupe{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-file-text"></i> Mentions Légales</h2>
+
+<div class="row">
+    <!-- Section principale (infos légales) -->
+    <div class="col-lg-8">
+
+        <!-- Éditeur du site -->
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Éditeur du site</h5></div>
+            <div class="card-body">
+                <p><strong>Raison sociale :</strong> GIFFAUD</p>
+                <p><strong>Adresse :</strong><br>ZA de Montfort<br>85590 LES EPESSES, FRANCE</p>
+                <p><strong>Téléphone :</strong> 02 51 57 34 64</p>
+                <p><strong>Fax :</strong> 02 51 57 36 79</p>
+                <p><strong>Email :</strong> <a href="mailto:contact@giffaudviandes.fr">contact@giffaudviandes.fr</a></p>
+                <p><strong>RCS :</strong> La Roche sur Yon 345 233 340</p>
+                <p><strong>Capital social :</strong> 301 800 €</p>
+                <p class="mb-0"><strong>Directeur de la publication :</strong> Mme Christine CANTERO GIFFAUD</p>
+            </div>
+        </div>
+
+        <!-- Protection des données -->
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Protection des données personnelles</h5></div>
+            <div class="card-body">
+                <p>Déclaration CNIL n°1509824, loi n° 78-17 et RGPD.</p>
+                <p>Droit d'accès, rectification, suppression et opposition aux données personnelles.</p>
+                <p class="mb-0">Contact : <a href="mailto:contact@giffaudviandes.fr">contact@giffaudviandes.fr</a> ou courrier postal.</p>
+            </div>
+        </div>
+
+        <!-- Propriété intellectuelle -->
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Propriété intellectuelle</h5></div>
+            <div class="card-body">
+                <p>Reproduction totale ou partielle interdite sans accord de GIFFAUD.</p>
+                <p class="mb-0">Usage personnel uniquement.</p>
+            </div>
+        </div>
+
+        <!-- Cookies -->
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Cookies</h5></div>
+            <div class="card-body">
+                <p>Cookies techniques indispensables :</p>
+                <ul>
+                    <li>Session : maintien de la connexion</li>
+                    <li>CSRF : sécurité des formulaires</li>
+                </ul>
+                <p class="mb-0">Ces cookies ne peuvent pas être désactivés.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section contact rapide -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-info-circle"></i> Contact</h5></div>
+            <div class="card-body">
+                <p>Pour toute question :</p>
+                <p><i class="bi bi-geo-alt text-muted me-2"></i>GIFFAUD<br><span class="ms-4">ZA de Montfort</span><br><span class="ms-4">85590 LES EPESSES</span></p>
+                <p><i class="bi bi-telephone text-muted me-2"></i><a href="tel:0251573464" class="text-decoration-none">02 51 57 34 64</a></p>
+                <p class="mb-0"><i class="bi bi-envelope text-muted me-2"></i><a href="mailto:contact@giffaudviandes.fr" class="text-decoration-none">contact@giffaudviandes.fr</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,28 +1,12 @@
-{% extends 'base.html' %}
+{% extends 'cote_client/base.html' %}
 
-{% block title %}Mes commandes - Extranet B2B{% endblock %}
+{% block title %}Mes commandes{% endblock %}
 
 {% block content %}
 <div class="row">
+
     <!-- Menu latéral -->
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-person-circle"></i> Mon compte</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="{% url 'clients:profil' %}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-person me-2"></i> Informations
-                </a>
-                <a href="{% url 'clients:modifier_mot_de_passe' %}" class="list-group-item list-group-item-action">
-                    <i class="bi bi-key me-2"></i> Modifier mot de passe
-                </a>
-                <a href="{% url 'commandes:historique' %}" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-clock-history me-2"></i> Mes commandes
-                </a>
-            </div>
-        </div>
-    </div>
+    {% include "cote_client/clients/menu_profil.html" %}
 
     <!-- Contenu principal -->
     <div class="col-md-9">
@@ -30,8 +14,10 @@
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mes commandes</h5>
             </div>
+
             <div class="card-body p-0">
                 {% if commandes %}
+                <!-- Tableau des commandes -->
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
@@ -52,22 +38,23 @@
                                 <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
                                 <td>{{ commande.total_ht|floatformat:2 }} €</td>
                                 <td>
-                                    {% if commande.statut == 'en_attente' %}
-                                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                                    {% elif commande.statut == 'confirmee' %}
-                                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                                    {% elif commande.statut == 'en_preparation' %}
-                                    <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                                    {% elif commande.statut == 'expediee' %}
-                                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                                    {% elif commande.statut == 'livree' %}
-                                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                                    {% elif commande.statut == 'annulee' %}
-                                    <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
+                                    {% if commande.statut %}
+                                        {% comment %} Badge dynamique selon le statut {% endcomment %}
+                                        <span class="badge
+                                            {% if commande.statut == 'en_attente' %}bg-warning text-dark
+                                            {% elif commande.statut == 'confirmee' %}bg-info
+                                            {% elif commande.statut == 'en_preparation' %}bg-primary
+                                            {% elif commande.statut == 'expediee' %}bg-info
+                                            {% elif commande.statut == 'livree' %}bg-success
+                                            {% elif commande.statut == 'annulee' %}bg-danger
+                                            {% endif %}">
+                                            {{ commande.get_statut_display }}
+                                        </span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'commandes:details' commande.id %}" class="btn btn-outline-primary btn-sm">
+                                    <a href="{% url 'commandes:details' commande.id %}"
+                                       class="btn btn-outline-primary btn-sm">
                                         <i class="bi bi-eye"></i> Détail
                                     </a>
                                 </td>
@@ -77,6 +64,7 @@
                     </table>
                 </div>
                 {% else %}
+                <!-- Message si aucune commande -->
                 <div class="text-center py-5">
                     <i class="bi bi-inbox display-1 text-muted"></i>
                     <h4 class="mt-3">Aucune commande</h4>
@@ -89,5 +77,6 @@
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}

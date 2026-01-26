@@ -1,45 +1,59 @@
-{% extends 'base.html' %}
+{% extends 'cote_client/base.html' %}
 
 {% block title %}Connexion - Giffaud Groupe Espace Pro{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-5 col-lg-4">
+        <!-- Card de connexion -->
         <div class="card shadow">
             <div class="card-body p-5">
+                
+                <!-- En-tête / logo et titre -->
                 <div class="text-center mb-4">
-                    <h1 class="h3 mb-1" style="font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: 1px;">GIFFAUD GROUPE</h1>
+                    <h1 class="h3 mb-1" style="font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: 1px;">
+                        GIFFAUD GROUPE
+                    </h1>
                     <div class="border-bottom border-dark mx-auto my-3" style="width: 60px; border-width: 2px !important;"></div>
                     <p class="text-muted mb-0">Espace Professionnel</p>
                 </div>
 
+                <!-- Formulaire de connexion -->
                 <form method="post">
                     {% csrf_token %}
 
+                    <!-- Erreurs globales du formulaire -->
                     {% if form.non_field_errors %}
                     <div class="alert alert-danger">
                         {% for error in form.non_field_errors %}
-                        {{ error }}
+                            {{ error }}
                         {% endfor %}
                     </div>
                     {% endif %}
 
+                    <!-- Champ identifiant -->
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Identifiant</label>
                         {{ form.username }}
                         {% if form.username.errors %}
-                        <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+                        <div class="invalid-feedback d-block">
+                            {{ form.username.errors.0 }}
+                        </div>
                         {% endif %}
                     </div>
 
+                    <!-- Champ mot de passe -->
                     <div class="mb-4">
                         <label for="id_password" class="form-label">Mot de passe</label>
                         {{ form.password }}
                         {% if form.password.errors %}
-                        <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+                        <div class="invalid-feedback d-block">
+                            {{ form.password.errors.0 }}
+                        </div>
                         {% endif %}
                     </div>
 
+                    <!-- Bouton de soumission -->
                     <button type="submit" class="btn btn-primary w-100 py-2">
                         Se connecter <i class="bi bi-arrow-right ms-2"></i>
                     </button>
@@ -47,6 +61,7 @@
             </div>
         </div>
 
+        <!-- Message d'aide / contact -->
         <p class="text-center text-muted mt-4">
             <small>Contactez votre commercial pour obtenir vos identifiants</small>
         </p>

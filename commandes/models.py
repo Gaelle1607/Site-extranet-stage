@@ -1,9 +1,9 @@
 from django.db import models
-from clients.models import Client
+from clients.models import Utilisateur
 
 
 class Commande(models.Model):
-    """Commande passée par un client"""
+    """Commande passée par un utilisateur"""
     STATUT_CHOICES = [
         ('en_attente', 'En attente'),
         ('confirmee', 'Confirmée'),
@@ -13,11 +13,11 @@ class Commande(models.Model):
         ('annulee', 'Annulée'),
     ]
 
-    client = models.ForeignKey(
-        Client,
+    utilisateur = models.ForeignKey(
+        Utilisateur,
         on_delete=models.CASCADE,
         related_name='commandes',
-        verbose_name='Client'
+        verbose_name='Utilisateur'
     )
     numero = models.CharField('Numéro de commande', max_length=50, unique=True)
     date_commande = models.DateTimeField('Date de commande', auto_now_add=True)
@@ -31,7 +31,7 @@ class Commande(models.Model):
         ordering = ['-date_commande']
 
     def __str__(self):
-        return f"Commande {self.numero} - {self.client.nom}"
+        return f"Commande {self.numero} - {self.utilisateur.code_tiers}"
 
     @classmethod
     def generer_numero(cls):

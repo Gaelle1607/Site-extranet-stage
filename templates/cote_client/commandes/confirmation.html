@@ -1,0 +1,40 @@
+{% extends 'cote_client/base.html' %}
+
+{% block title %}Commande envoyée{% endblock %}
+
+{% block content %}
+
+<!-- Message principal de confirmation -->
+<div class="text-center py-5">
+    <i class="bi bi-check-circle-fill text-success mb-4"
+       style="font-size: 5rem;"></i>
+
+    <h1 class="mb-3">Commande envoyée !</h1>
+    <p class="lead text-muted mb-1">
+        Votre commande a été transmise avec succès.
+    </p>
+    <p class="text-muted">
+        Vous recevrez une confirmation de traitement prochainement.
+    </p>
+</div>
+
+<!-- Carte d'action -->
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <p class="mb-4">
+                    Merci pour votre commande !
+                </p>
+
+                <a href="{% url 'catalogue:liste' %}"
+                   class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-left"></i>
+                    Retour au catalogue
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
