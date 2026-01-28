@@ -3,8 +3,24 @@
 {% block title %}Cadencier - {{ client.nom }}{% endblock %}
 
 {% block content %}
-<!-- Titre de la page -->
-<h2>Cadencier de {{ client.nom }}</h2>
+<!-- Titre de la page + bouton -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-card-list"></i> Cadencier de {{ client.nom }}</h2>
+    {% if utilisateur %}
+    <div class="d-flex gap-2">
+        <a href="{% url 'administration:information_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-person-check"></i> Information utilisateur
+        </a>
+        <a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-cart2"></i> Voir les commandes
+        </a>
+    </div>
+    {% else %}
+    <a href="{% url 'administration:inscription' %}?tiers={{ client.tiers }}&nom={{ client.nom|urlencode }}" class="btn btn-outline-secondary">
+        <i class="bi bi-person-plus"></i> Inscription sur le site
+    </a>
+    {% endif %}
+</div>
 
 <!-- Formulaire de recherche -->
 <form method="get" class="d-flex gap-2 mb-3">
@@ -13,7 +29,7 @@
     
     <!-- Bouton Effacer affiché uniquement si une recherche est active -->
     {% if query %}
-        <a href="{% url 'administration:cadencier_client' client.id %}" class="btn btn-outline-secondary d-flex align-items-center">
+        <a href="{% url 'administration:cadencier_client' client.tiers %}" class="btn btn-outline-secondary d-flex align-items-center">
             Effacer
         </a>
     {% endif %}
@@ -25,15 +41,23 @@
         <tr>
             <th>Référence</th>
             <th>Produit</th>
-            <th>Prix en €/kg</th>
+            <th>Prix en €</th>
+            <th>Unité</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-liste-limitee>
         {% for produit in produits %}
             <tr>
                 <td>{{ produit.prod }}</td>
                 <td>{{ produit.libelle }}</td>
                 <td>{{ produit.pu_base|floatformat:2 }}</td>
+                {% if produit.poids > 0 %}
+                <td>kg</td>
+                {% elif produit.colis > 0 %}
+                <td>Colis</td>
+                {% else %}
+                <td>--</td>
+                {% endif %}
             </tr>
         {% empty %}
             <!-- Message si aucun produit trouvé -->

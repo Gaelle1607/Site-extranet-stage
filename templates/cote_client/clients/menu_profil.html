@@ -9,15 +9,15 @@
 
             <div class="list-group list-group-flush">
                 <a href="{% url 'clients:profil' %}"
-                   class="list-group-item list-group-item-action active">
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
                     <i class="bi bi-person me-2"></i> Informations
                 </a>
                 <a href="{% url 'clients:modifier_mot_de_passe' %}"
-                   class="list-group-item list-group-item-action">
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'modifier_mot_de_passe' %}active{% endif %}">
                     <i class="bi bi-key me-2"></i> Modifier mot de passe
                 </a>
                 <a href="{% url 'commandes:historique' %}"
-                   class="list-group-item list-group-item-action">
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'historique' %}active{% endif %}">
                     <i class="bi bi-clock-history me-2"></i> Mes commandes
                 </a>
             </div>

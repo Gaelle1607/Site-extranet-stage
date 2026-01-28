@@ -1,0 +1,94 @@
+{% extends 'administration/base_admin.html' %}
+
+{% block title %}Information - {{ utilisateur.user.username }}{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-person-circle"></i> Information utilisateur</h2>
+
+<div class="row">
+    <!-- Informations du compte -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Compte</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.user.username }}</p>
+                <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
+                <p><strong>Statut :</strong>
+                    {% if utilisateur.actif %}
+                        <span class="badge bg-success">Actif</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactif</span>
+                    {% endif %}
+                </p>
+                <p><strong>Date d'inscription :</strong> {{ utilisateur.user.date_joined|date:"d/m/Y H:i" }}</p>
+                <p><strong>Derniere connexion :</strong> {{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations du client distant -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-building"></i> Client</h5>
+            </div>
+            <div class="card-body">
+                {% if client %}
+                    <p><strong>Nom :</strong> {{ client.nom }}</p>
+                    {% if client.complement %}
+                        <p><strong>Complement :</strong> {{ client.complement }}</p>
+                    {% endif %}
+                    {% if client.adresse %}
+                        <p><strong>Adresse :</strong> {{ client.adresse }}</p>
+                    {% endif %}
+                    {% if client.cp or client.acheminement %}
+                        <p><strong>Ville :</strong> {{ client.cp }} {{ client.acheminement }}</p>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted">Aucune information client trouvee dans la base distante.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Changement de mot de passe -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-key"></i> Changer le mot de passe</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'administration:changer_mot_de_passe' utilisateur.id %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-5 mb-3">
+                    <label for="nouveau_mdp" class="form-label">Nouveau mot de passe</label>
+                    <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required>
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="confirm_mdp" class="form-label">Confirmer le mot de passe</label>
+                    <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-key"></i> Modifier
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour aux utilisateurs
+</a>
+<a href="{% url 'administration:cadencier_client' utilisateur.code_tiers %}" class="btn btn-outline-primary">
+    <i class="bi bi-card-list"></i> Voir le cadencier
+</a>
+<a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
+    <i class="bi bi-cart2"></i> Voir les commandes
+</a>
+
+{% endblock %}

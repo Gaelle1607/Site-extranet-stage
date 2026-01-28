@@ -13,26 +13,33 @@
         </div>
         <div class="card-body">
             <!-- Informations principales -->
-            <p><strong>Client :</strong> {{ commande.client.nom }}</p>
-            <p><strong>Date de commande :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
-            <p><strong>Total HT :</strong> {{ commande.total_ht|floatformat:2 }} €</p>
-            
-            <!-- Statut de la commande avec badge coloré -->
-            <p><strong>Statut :</strong>
-                {% if commande.statut == 'en_attente' %}
-                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'confirmee' %}
-                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'en_preparation' %}
-                    <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'expediee' or commande.statut == 'livree' %}
-                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                {% elif commande.statut == 'annulee' %}
-                    <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
-                {% endif %}
-            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Code Client :</strong> {{ client.tiers }}</p>
+                    <p><strong>Client :</strong> {{ client.nom }}</p>
+                    <p><strong>Total HT :</strong> {{ commande.total_ht|floatformat:2 }} €</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Date de commande :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Date de livraison prévue :</strong> {{ commande.date_livraison|date:"d/m/Y"|default:"Non définie" }}</p>
+                    <!-- Statut de la commande avec badge coloré -->
+                    <p><strong>Statut :</strong>
+                        {% if commande.statut == 'en_attente' %}
+                            <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
+                        {% elif commande.statut == 'confirmee' %}
+                            <span class="badge bg-info">{{ commande.get_statut_display }}</span>
+                        {% elif commande.statut == 'en_preparation' %}
+                            <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
+                        {% elif commande.statut == 'expediee' or commande.statut == 'livree' %}
+                            <span class="badge bg-success">{{ commande.get_statut_display }}</span>
+                        {% elif commande.statut == 'annulee' %}
+                            <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
 
             <!-- Commentaire optionnel -->
             {% if commande.commentaire %}
@@ -42,29 +49,40 @@
             <!-- Articles de la commande -->
             {% if commande.lignes.all %}
                 <h6>Articles</h6>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Prix unitaire</th>
-                            <th>Quantité</th>
-                            <th>Total HT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ligne in commande.lignes.all %}
+                <div style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-bordered mb-0">
+                        <thead style="position: sticky; top: 0; z-index: 1; background-color: var(--giffaud-gris-clair);">
                             <tr>
-                                <td>{{ ligne.nom_produit }}</td>
-                                <td>{{ ligne.prix_unitaire|floatformat:2 }} €</td>
-                                <td>{{ ligne.quantite }}</td>
-                                <td>{{ ligne.total_ligne|floatformat:2 }} €</td>
+                                <th>Nom</th>
+                                <th>Prix unitaire</th>
+                                <th>Quantité</th>
+                                <th>Total HT</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for ligne in commande.lignes.all %}
+                                <tr>
+                                    <td>{{ ligne.nom_produit }}</td>
+                                    <td>{{ ligne.prix_unitaire|floatformat:2 }} €</td>
+                                    <td>{{ ligne.quantite }}</td>
+                                    <td>{{ ligne.total_ligne|floatformat:2 }} €</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% endif %}
 
         </div>
     </div>
 </div>
+<p><a href="{% url 'administration:liste_commande' %}" class="btn btn-outline-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Retour aux commandes
+</a>
+</p>
+<p>
+<a href="{% url 'administration:commande_utilisateur' commande.utilisateur.id %}" class="btn btn-outline-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Retour aux commandes de l'utilisateur
+</a>
+</p>
 {% endblock %}

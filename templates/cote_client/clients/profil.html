@@ -20,19 +20,22 @@
             <div class="card-body">
                 <div class="row">
 
-                    <!-- Informations personnelles -->
+                    <!-- Colonne 1 -->
                     <div class="col-md-6">
-                        <h6 class="text-muted mb-3">
-                            Informations personnelles
-                        </h6>
+                        <h6 class="text-muted mb-3">Identité</h6>
 
                         <p class="mb-2">
-                            <strong>Nom :</strong><br>
+                            <strong>Nom Client :</strong><br>
                             {{ client.nom }}
                         </p>
 
                         <p class="mb-2">
-                            <strong>Nom d'utilisateur :</strong><br>
+                            <strong>Code client :</strong><br>
+                            {{ client.tiers|default:"N/A" }}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Nom d'Utilisateur :</strong><br>
                             {{ user.username }}
                         </p>
 
@@ -41,33 +44,26 @@
                             {{ client.complement|default:"Non renseigné" }}
                         </p>
 
-                        <p class="mb-0">
+                    </div>
+
+                    <!-- Colonne 2 -->
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">Adresse</h6>
+
+                        <p class="mb-2">
                             <strong>Adresse :</strong><br>
                             {{ client.adresse|default:"Non renseigné" }}
                         </p>
 
-                        <p>
+                        <p class="mb-2">
                             <strong>Code Postal :</strong><br>
                             {{ client.cp|default:"Non renseigné" }}
                         </p>
 
-                        <p>
-                            <strong>Ville :</strong><br>
-                            {{ client.acheminement|default:"Non renseigné"}}
-                        </p>
-                    </div>
-
-                    <!-- Informations client -->
-                    <div class="col-md-6">
-                        <h6 class="text-muted mb-3">
-                            Informations client
-                        </h6>
-
                         <p class="mb-2">
-                            <strong>Code client :</strong><br>
-                            {{ client.code_client|default:"N/A" }}
+                            <strong>Ville :</strong><br>
+                            {{ client.acheminement|default:"Non renseigné" }}
                         </p>
-
                     </div>
 
                 </div>

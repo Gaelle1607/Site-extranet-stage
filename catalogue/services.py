@@ -1,6 +1,8 @@
 """
 Service pour récupérer les produits et prix depuis la base MariaDB distante.
 """
+from django.db import connections
+
 from .models import ComCli, ComCliLig, Catalogue, Prod
 
 
@@ -14,15 +16,13 @@ def get_client_distant(code_tiers):
     Returns:
         Instance ComCli ou None
     """
-    try:
-        return ComCli.objects.using('logigvd').get(tiers=code_tiers)
-    except ComCli.DoesNotExist:
-        return None
+    return ComCli.objects.using('logigvd').filter(tiers=code_tiers).first()
 
 
 def get_produits_client(utilisateur):
     """
     Récupère la liste des produits avec prix pour un utilisateur.
+    Utilise une seule requête SQL avec JOINs pour optimiser les performances.
 
     Args:
         utilisateur: Instance Utilisateur (avec code_tiers)
@@ -35,31 +35,63 @@ def get_produits_client(utilisateur):
     if not code_tiers:
         return []
 
-    # Récupérer les produits du catalogue pour ce client spécifique
-    catalogue_items = Catalogue.objects.using('logigvd').filter(tiers=code_tiers)
+    with connections['logigvd'].cursor() as cursor:
+        # Requête 1 : catalogue + libellé produit (rapide, catalogue filtré par tiers)
+        cursor.execute("""
+            SELECT c.prod, p.libelle
+            FROM catalogue c
+            LEFT JOIN prod p ON c.prod = p.prod
+            WHERE c.tiers = %s
+        """, [code_tiers])
+        catalogue_rows = cursor.fetchall()
 
-    # Récupérer les codes produits du catalogue
-    codes_produits = [item.prod for item in catalogue_items]
+        if not catalogue_rows:
+            return []
 
-    # Récupérer les lignes de produits (avec prix et qte) pour ces produits
-    lignes = ComCliLig.objects.using('logigvd').filter(prod__in=codes_produits)
-    lignes_dict = {ligne.prod: ligne for ligne in lignes}
+        codes_produits = [r[0] for r in catalogue_rows]
+        libelles = {r[0]: r[1] for r in catalogue_rows}
 
-    # Récupérer les infos produits
-    prods = Prod.objects.using('logigvd').filter(prod__in=codes_produits)
-    prods_dict = {p.prod: p for p in prods}
+        # Requête 2 : prix et quantités depuis comclilig, filtré par client via comcli
+        placeholders = ','.join(['%s'] * len(codes_produits))
+        cursor.execute(f"""
+            SELECT l.prod, MAX(l.pu_base), MAX(l.qte), MAX(l.poids), MAX(l.colis)
+            FROM comclilig l
+            INNER JOIN comcli c ON l.comcli = c.comcli AND l.lieusais = c.lieusais
+            WHERE c.tiers = %s AND l.prod IN ({placeholders})
+            GROUP BY l.prod
+        """, [code_tiers] + codes_produits)
+        lignes = {r[0]: r[1:] for r in cursor.fetchall()}
 
     produits = []
-    for item in catalogue_items:
-        prod_info = prods_dict.get(item.prod)
-        ligne_info = lignes_dict.get(item.prod)
+    for prod_code in codes_produits:
+        ligne = lignes.get(prod_code)
+        libelle = libelles.get(prod_code) or prod_code
+        pu_base = float(ligne[0]) if ligne and ligne[0] else 0
+        poids = float(ligne[2]) if ligne and ligne[2] else 0
+        colis = int(ligne[3]) if ligne and ligne[3] else 0
+
+        # Déterminer l'unité de vente
+        if poids > 0:
+            unite = 'kg'
+        elif colis > 0:
+            unite = 'Colis'
+        else:
+            unite = ''
+
+        if pu_base <= 0:
+            continue
 
         produit = {
-            'prod': item.prod,
-            'libelle': prod_info.libelle if prod_info else item.prod,
-            'pu_base': float(ligne_info.pu_base) if ligne_info and ligne_info.pu_base else 0,
-            'reference': item.prod,
-            'nb_commandes': int(ligne_info.qte) if ligne_info and ligne_info.qte else 0,
+            'prod': prod_code,
+            'reference': prod_code,
+            'libelle': libelle,
+            'nom': libelle,
+            'pu_base': pu_base,
+            'prix': pu_base,
+            'unite': unite,
+            'nb_commandes': int(ligne[1]) if ligne and ligne[1] else 0,
+            'poids': poids,
+            'colis': colis,
         }
         produits.append(produit)
 

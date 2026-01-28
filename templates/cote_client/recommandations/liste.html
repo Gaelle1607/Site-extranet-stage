@@ -15,10 +15,10 @@
         </div>
 
         {% if recommandations %}
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" data-liste-limitee>
             {% for produit in recommandations %}
             <div class="col">
-                <div class="card h-100 produit-card{% if produit.stock is not None and not produit.stock %} produit-rupture{% endif %}">
+                <div class="card h-100 produit-card">
 
                     <div class="card-body">
                         <p class="text-muted small mb-1">{{ produit.reference }}</p>
@@ -29,35 +29,26 @@
                     </div>
 
                     <div class="card-footer bg-white">
-                        <!-- Prix et stock -->
+                        <!-- Prix -->
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
                                 <span class="h5 mb-0 text-primary">{{ produit.prix|floatformat:2 }} €</span>
                                 <small class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</small>
                             </div>
-                            {% if produit.stock is not None %}
-                                <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
-                                    {% if produit.stock > 0 %}En stock{% else %}Rupture{% endif %}
-                                </span>
-                            {% endif %}
                         </div>
 
                         <!-- Formulaire ajout panier -->
-                        {% if produit.stock is None or produit.stock > 0 %}
-                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form mb-2">
+                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form my-3">
                             {% csrf_token %}
                             <input type="hidden" name="reference" value="{{ produit.reference }}">
                             <div class="input-group">
-                                <input type="number" name="quantite" value="1" min="1" max="{{ produit.stock }}" class="form-control text-center">
+                                <input type="number" name="quantite" value="1" min="1" class="form-control text-center">
                                 <button type="submit" class="btn btn-primary"><i class="bi bi-cart-plus"></i> Ajouter</button>
                             </div>
                         </form>
-                        {% else %}
-                        <div class="text-center text-muted mb-2 py-2"><i class="bi bi-x-circle"></i> Indisponible</div>
-                        {% endif %}
 
                         <!-- Voir produit -->
-                        <a href="{% url 'catalogue:detail' produit.reference %}" class="btn btn-outline-primary btn-sm w-100">
+                        <a href="{% url 'catalogue:detail' produit.reference %}" class="btn btn-outline-primary btn-sm w-100 mt-2">
                             <i class="bi bi-eye"></i> Voir produit
                         </a>
                     </div>

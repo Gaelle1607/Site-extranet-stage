@@ -2,9 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, CharField
+from django.db.models.functions import Cast
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from django.db import connections
 from clients.models import Utilisateur
 from commandes.models import Commande
 from catalogue.services import get_produits_client
@@ -32,7 +34,9 @@ def dashboard(request):
     # Compter les utilisateurs (non staff, non superuser)
     nb_utilisateurs = Utilisateur.objects.filter(user__is_staff=False, user__is_superuser=False).count()
     nb_commandes = Commande.objects.count()
-    nb_clients = ComCli.objects.count()
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM (SELECT 1 FROM comcli WHERE tiers != 0 GROUP BY tiers, complement) t")
+        nb_clients = cursor.fetchone()[0]
 
     context = {
         'page_title': 'Administration',
@@ -45,7 +49,7 @@ def dashboard(request):
 @admin_required
 def liste_commande(request):
     """Liste des commandes"""
-    commandes = Commande.objects.all()
+    commandes = Commande.objects.all().order_by('-date_commande')
 
     # Recherche
     query = request.GET.get('q', '')
@@ -58,6 +62,8 @@ def liste_commande(request):
             Q(statut__icontains=query_statut)
         )
 
+    commandes = commandes[:50]
+
     context = {
         'page_title': 'Liste des commandes',
         'commandes': commandes,
@@ -69,11 +75,31 @@ def liste_commande(request):
 def details_commande(request, commande_id):
     """Détails d'une commande"""
     commande = Commande.objects.get(id=commande_id)
+    client = commande.utilisateur.get_client_distant()
     context = {
         'page_title': f'Détails de la commande {commande.numero}',
         'commande': commande,
+        'client': client,
     }
     return render(request, 'administration/details_commande.html', context)
+
+@admin_required
+def commande_utilisateur(request, utilisateur_id):
+    """Liste des commandes d'un client"""
+    utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
+    client_distant = ComCli.objects.using('logigvd').filter(tiers=utilisateur.code_tiers).first()
+    nom_client = client_distant.nom if client_distant else f"Client {utilisateur.code_tiers}"
+
+    commandes = Commande.objects.filter(utilisateur=utilisateur).order_by('-date_commande')[:50]
+
+    context = {
+        'page_title': f'Commandes - {nom_client}',
+        'utilisateur': utilisateur,
+        'client': client_distant,
+        'nom_client': nom_client,
+        'commandes': commandes,
+    }
+    return render(request, 'administration/commande_utilisateur.html', context)
 
 
 @admin_required
@@ -123,45 +149,81 @@ def catalogue_utilisateurs(request):
 @admin_required
 def catalogue_clients(request):
     """Liste des clients de la base distante"""
-    query = request.GET.get('q', '').strip().lower()
+    query = request.GET.get('q', '').strip()
 
-    # Récupérer les tiers distincts avec nom et acheminement
-    tiers_distincts = ComCli.objects.using('logigvd').values_list('tiers', 'nom', 'acheminement').distinct()
-
-    # Filtrer par nom, tiers ou acheminement
+    # SQL brut : groupé par (tiers, complement)
+    # Même tiers sans complement = 1 carte, même tiers avec complements différents = plusieurs cartes
     if query:
-        tiers_distincts = [
-            (t, n, a) for t, n, a in tiers_distincts
-            if query in str(t).lower() or query in n.lower() or (a and query in a.lower())
-        ]
+        if query.isdigit():
+            # Recherche numérique : tiers exact (index) + FULLTEXT nom/acheminement
+            sql = """
+                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
+                FROM comcli
+                WHERE tiers = %s
+                GROUP BY tiers, complement
 
-    # Limiter à 100 résultats
-    tiers_distincts = tiers_distincts[:100]
+                UNION
 
-    # Récupérer un client par tiers (le premier trouvé)
-    clients = []
-    for tiers, nom, acheminement in tiers_distincts:
-        client = ComCli.objects.using('logigvd').filter(tiers=tiers).first()
-        if client:
-            clients.append(client)
+                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
+                FROM comcli
+                WHERE tiers != 0
+                  AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+                GROUP BY tiers, complement
+
+                ORDER BY tiers
+                LIMIT 100
+            """
+            params = [int(query), f'{query}*']
+        else:
+            # Recherche texte : FULLTEXT sur nom/acheminement
+            sql = """
+                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
+                FROM comcli
+                WHERE tiers != 0
+                  AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+                GROUP BY tiers, complement
+                ORDER BY tiers
+                LIMIT 100
+            """
+            params = [f'{query}*']
+    else:
+        sql = """
+            SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
+            FROM comcli
+            WHERE tiers != 0
+            GROUP BY tiers, complement
+            ORDER BY tiers
+            LIMIT 100
+        """
+        params = []
+
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+    clients = [
+        {'tiers': row[0], 'nom': row[1], 'complement': row[2] or '', 'acheminement': row[3] or ''}
+        for row in rows
+    ]
 
     context = {
         'page_title': 'Catalogue Clients',
         'clients': clients,
-        'query': request.GET.get('q', ''),
+        'query': query,
     }
     return render(request, 'administration/catalogue_clients.html', context) 
 
 @admin_required
-def cadencier_client(request, client_id):
-    utilisateur = Utilisateur.objects.get(id=client_id)
-    try:
-        client_distant = ComCli.objects.using('logigvd').get(tiers=utilisateur.code_tiers)
-        nom_client = client_distant.nom
-    except ComCli.DoesNotExist:
-        nom_client = utilisateur.code_tiers
+def cadencier_client(request, code_tiers):
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute("SELECT MAX(nom) FROM comcli WHERE tiers = %s", [code_tiers])
+        row = cursor.fetchone()
+    nom_client = row[0] if row and row[0] else str(code_tiers)
 
-    produits = get_produits_client(utilisateur)
+    # Créer un objet avec code_tiers pour le service
+    from types import SimpleNamespace
+    utilisateur_proxy = SimpleNamespace(code_tiers=code_tiers)
+    produits = get_produits_client(utilisateur_proxy)
 
     # Recherche
     query = request.GET.get('q', '')
@@ -171,14 +233,49 @@ def cadencier_client(request, client_id):
                     query_lower in p.get('libelle', '').lower() or
                     query_lower in p.get('prod', '').lower()]
 
+    # Vérifier si un utilisateur est inscrit pour ce client
+    utilisateur = Utilisateur.objects.filter(code_tiers=str(code_tiers)).first()
+
     context = {
         'page_title': f'Cadencier - {nom_client}',
-        'client': {'id': utilisateur.id, 'nom': nom_client},
+        'client': {'tiers': code_tiers, 'nom': nom_client},
+        'utilisateur': utilisateur,
         'produits': produits,
         'query': query,
     }
     return render(request, 'administration/cadencier_client.html', context)
 
+@admin_required
+def information_utilisateur(request, utilisateur_id):
+    utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
+    client_distant = ComCli.objects.using('logigvd').filter(tiers=utilisateur.code_tiers).first()
+
+    context = {
+        'page_title': f'Information - {utilisateur.user.username}',
+        'utilisateur': utilisateur,
+        'client': client_distant,
+    }
+    return render(request, 'administration/information_utilisateur.html', context)
+
+@admin_required
+@require_POST
+def changer_mot_de_passe(request, utilisateur_id):
+    utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
+    nouveau_mdp = request.POST.get('nouveau_mdp', '')
+    confirm_mdp = request.POST.get('confirm_mdp', '')
+
+    if not nouveau_mdp:
+        messages.error(request, 'Le mot de passe ne peut pas être vide.')
+    elif nouveau_mdp != confirm_mdp:
+        messages.error(request, 'Les mots de passe ne correspondent pas.')
+    elif len(nouveau_mdp) < 4:
+        messages.error(request, 'Le mot de passe doit contenir au moins 4 caractères.')
+    else:
+        utilisateur.user.set_password(nouveau_mdp)
+        utilisateur.user.save()
+        messages.success(request, f'Mot de passe de {utilisateur.user.username} modifié avec succès.')
+
+    return redirect('administration:information_utilisateur', utilisateur_id=utilisateur_id)
 
 @admin_required
 @require_POST
@@ -235,8 +332,14 @@ def inscription(request):
                 messages.success(request, f'Utilisateur {username} créé avec succès.')
                 return redirect('administration:catalogue_utilisateur')
 
+    # Pré-remplissage depuis le cadencier (paramètres GET)
+    prefill_tiers = request.GET.get('tiers', '')
+    prefill_nom = request.GET.get('nom', '')
+
     context = {
         'page_title': 'Inscription',
+        'prefill_tiers': prefill_tiers,
+        'prefill_nom': prefill_nom,
     }
     return render(request, 'administration/inscription.html', context)
 
@@ -244,19 +347,46 @@ def inscription(request):
 @admin_required
 def recherche_clients_api(request):
     """API pour rechercher les clients (utilisée par le champ de recherche AJAX)"""
-    query = request.GET.get('q', '').strip().lower()
+    query = request.GET.get('q', '').strip()
     if len(query) < 2:
         return JsonResponse({'clients': []})
 
-    # Récupérer les tiers distincts avec nom et acheminement
-    tiers_distincts = ComCli.objects.using('logigvd').values_list('tiers', 'nom', 'acheminement').distinct()
+    # Recherche optimisée avec FULLTEXT + index tiers
+    if query.isdigit():
+        sql = """
+            SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement
+            FROM comcli
+            WHERE tiers = %s
+            GROUP BY tiers, complement
 
-    # Filtrer par nom, tiers ou acheminement
-    result = []
-    for tiers, nom, acheminement in tiers_distincts:
-        if query in str(tiers).lower() or query in nom.lower() or (acheminement and query in acheminement.lower()):
-            result.append({'tiers': tiers, 'nom': nom})
-            if len(result) >= 20:
-                break
+            UNION
+
+            SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement
+            FROM comcli
+            WHERE tiers != 0
+              AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+            GROUP BY tiers, complement
+
+            ORDER BY tiers
+            LIMIT 20
+        """
+        params = [int(query), f'{query}*']
+    else:
+        sql = """
+            SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement
+            FROM comcli
+            WHERE tiers != 0
+              AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+            GROUP BY tiers, complement
+            ORDER BY tiers
+            LIMIT 20
+        """
+        params = [f'{query}*']
+
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+
+    result = [{'tiers': row[0], 'nom': row[1], 'complement': row[2] or ''} for row in rows]
 
     return JsonResponse({'clients': result})

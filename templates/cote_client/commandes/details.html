@@ -40,9 +40,9 @@
             </div>
 
             <!-- Tableau des lignes de commande -->
-            <div class="card-body p-0">
+            <div class="card-body p-0" style="max-height: 450px; overflow-y: auto;">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
                         <tr>
                             <th>Produit</th>
                             <th class="text-center" style="width:100px;">Qté</th>
@@ -109,12 +109,16 @@
                     {{ commande.date_commande|date:"d/m/Y à H:i" }}
                 </p>
                 <p class="mb-2">
-                    <strong>Client :</strong><br>
-                    {{ commande.client.nom }}
+                    <strong>Date de livraison prévue :</strong> <br>
+                     {{ commande.date_livraison|date:"d/m/Y"|default:"Non définie" }}
                 </p>
                 <p class="mb-2">
-                    <strong>Société :</strong><br>
-                    {{ commande.client.societe }}
+                    <strong>Client :</strong><br>
+                    {{ client.nom }}
+                </p>
+                <p class="mb-2">
+                    <strong>Numéro client :</strong><br>
+                    {{ client.tiers|default:"N/A" }}
                 </p>
                 <p class="mb-0">
                     <strong>Articles :</strong><br>

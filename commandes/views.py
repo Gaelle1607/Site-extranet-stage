@@ -225,6 +225,13 @@ def vider_panier(request):
     request.session['panier'] = {}
     request.session.modified = True
 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': 'Panier vidé',
+            'panier_count': 0,
+        })
+
     messages.success(request, 'Votre panier a été vidé.')
     return redirect('commandes:panier')
 
@@ -259,6 +266,7 @@ def valider_commande(request):
 
     if request.method == 'POST':
         notes = request.POST.get('commentaires', '') or request.POST.get('notes', '')
+        date_livraison = request.POST.get('date_livraison') or None
 
         # Préparer les données de commande
         nom_client = client_distant.nom if client_distant else utilisateur.code_tiers
@@ -267,6 +275,7 @@ def valider_commande(request):
             'lignes': lignes,
             'total': total,
             'notes': notes,
+            'date_livraison': date_livraison,
         }
 
         # DEBUG: Afficher la commande dans le terminal
@@ -294,6 +303,7 @@ def valider_commande(request):
             commande = Commande.objects.create(
                 utilisateur=utilisateur,
                 numero=Commande.generer_numero(),
+                date_livraison=date_livraison,
                 total_ht=Decimal(str(total)),
                 commentaire=notes,
                 statut='en_attente'
@@ -338,7 +348,7 @@ def historique_commandes(request):
     """Affiche l'historique des commandes de l'utilisateur"""
     utilisateur = request.user.utilisateur
     client_distant = get_client_distant(utilisateur.code_tiers)
-    commandes = Commande.objects.filter(utilisateur=utilisateur).order_by('-date_commande')
+    commandes = Commande.objects.filter(utilisateur=utilisateur).order_by('-date_commande')[:50]
     return render(request, 'cote_client/commandes/historique.html', {
         'client': client_distant,
         'commandes': commandes

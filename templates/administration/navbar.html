@@ -1,5 +1,5 @@
 <!-- Navbar principale de l'administration -->
-<nav class="navbar navbar-expand-lg navbar-dark">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
         <!-- Logo / nom de l'administration -->
         <a class="navbar-brand" href="{% url 'administration:dashboard' %}">
@@ -12,7 +12,7 @@
         </button>
 
         <!-- Liens de navigation (collapsables sur mobile) -->
-        <div class="collapse navbar-collapse" id="navbarAdmin">
+        <div class="collapse navbar-collapse text-end" id="navbarAdmin">
             <ul class="navbar-nav ms-auto">
                 <!-- Nom de l'utilisateur -->
                 <li class="nav-item">

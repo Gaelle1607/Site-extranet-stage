@@ -67,7 +67,7 @@ class ComCliLig(models.Model):
 
 class Catalogue(models.Model):
     """Table catalogue - produits disponibles par client (base distante logigvd)"""
-    tiers = models.IntegerField('Code tiers')
+    tiers = models.IntegerField('Code tiers', primary_key=True)
     prod = models.CharField('Code produit', max_length=50)
 
     class Meta:

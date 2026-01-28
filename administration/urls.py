@@ -10,7 +10,10 @@ urlpatterns = [
     path('commandes/<int:commande_id>/supprimer/', views.supprimer_commande, name='supprimer_commande'),
     path('utilisateurs/', views.catalogue_utilisateurs, name='catalogue_utilisateur'),
     path('clients/', views.catalogue_clients, name='catalogue_clients'),
-    path('cadencier/<int:client_id>/', views.cadencier_client, name='cadencier_client'),
+    path('cadencier/<int:code_tiers>/', views.cadencier_client, name='cadencier_client'),
+    path('information/<int:utilisateur_id>/', views.information_utilisateur, name='information_utilisateur'),
+    path('information/<int:utilisateur_id>/mot-de-passe/', views.changer_mot_de_passe, name='changer_mot_de_passe'),
+    path('information/<int:utilisateur_id>/commandes/', views.commande_utilisateur, name='commande_utilisateur'),
     path('inscription/',views.inscription, name='inscription'),
     path('api/recherche-clients/', views.recherche_clients_api, name='recherche_clients_api'),
 ]

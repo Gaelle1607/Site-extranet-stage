@@ -19,7 +19,4 @@ class Utilisateur(models.Model):
     def get_client_distant(self):
         """Récupère les infos client depuis la base distante"""
         from catalogue.models import ComCli
-        try:
-            return ComCli.objects.using('logigvd').get(tiers=self.code_tiers)
-        except ComCli.DoesNotExist:
-            return None
+        return ComCli.objects.using('logigvd').filter(tiers=self.code_tiers).first()

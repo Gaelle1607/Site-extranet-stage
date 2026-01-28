@@ -1,4 +1,5 @@
 {% extends 'cote_client/base.html' %}
+{% load l10n %}
 
 {% block title %}Commander{% endblock %}
 
@@ -86,43 +87,58 @@
 
         <!-- Section produits -->
         <div class="produits-commande-section mt-4">
-            <h4><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" id="vider-panier-btn" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i> Vider la commande
+                    </button>
+                    <div class="position-relative" style="max-width: 300px;">
+                        <input type="text" id="recherche-produit" class="form-control pe-5" placeholder="Rechercher un produit...">
+                        <button type="button" id="effacer-recherche" class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted" style="display:none;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             {% if produits %}
-                {% for produit in produits %}
-                <div class="produit-ligne d-flex justify-content-between align-items-center mb-2">
-                    <!-- Nom produit -->
-                    <span class="produit-nom flex-grow-1">{{ produit.nom }}</span>
-
-                    {% if produit.stock is None or produit.stock > 0 %}
-                        <!-- Prix unitaire -->
-                        <span class="produit-prix-unitaire me-3 text-end" style="width: 200px;">
-                            <strong>{{ produit.prix|floatformat:2 }}</strong> €/HT/{{ produit.unite }}
-                        </span>
-
-                        <!-- Quantité -->
-                        <input type="number"
-                               name="qte_{{ produit.reference }}"
-                               min="0"
-                               value="0"
-                               max="{{ produit.stock }}"
-                               data-prix="{{ produit.prix }}"
-                               class="form-control form-control-sm quantite-commande-input me-3"
-                               style="width: 80px;">
-
-                        <!-- Sous-total ligne -->
-                        <span class="sous-total-ligne fw-bold text-end" style="width: 100px;">0.00 €</span>
-                    {% else %}
-                        <!-- Produit indisponible -->
-                        <span class="text-muted fw-bold text-center" style="width: 280px;">
-                            <i class="bi bi-x-circle me-1"></i> Indisponible
-                        </span>
-                    {% endif %}
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0 align-middle">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Produit</th>
+                                <th class="text-end" style="width: 140px;">Prix HT</th>
+                                <th class="text-center" style="width: 90px;">Qté</th>
+                                <th class="text-end" style="width: 100px;">Sous-total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produit in produits %}
+                            <tr class="produit-ligne">
+                                <td class="produit-nom">{{ produit.nom }}</td>
+                                <td class="text-end text-nowrap">
+                                    <strong>{{ produit.prix|floatformat:2 }}</strong> €/{{ produit.unite }}
+                                </td>
+                                <td class="text-center">
+                                    <input type="number"
+                                           name="qte_{{ produit.reference }}"
+                                           min="0"
+                                           value="{{ produit.panier_qte }}"
+                                           data-prix="{{ produit.prix|unlocalize }}"
+                                           data-reference="{{ produit.reference }}"
+                                           class="form-control form-control-sm quantite-commande-input text-center"
+                                           style="width: 70px; margin: 0 auto;">
+                                </td>
+                                <td class="text-end fw-bold sous-total-ligne text-nowrap">0.00 €</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                {% endfor %}
 
                 <!-- Total général -->
-                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                     <span class="fw-bold h5 mb-0">
                         Total produits : <span id="total-quantite">0</span> articles
                     </span>
@@ -157,41 +173,9 @@
     </form>
 </div>
 
-<!-- Script dynamique pour calcul du total et date minimum -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Date de livraison minimum (aujourd'hui + 7 jours)
-    const dateLivraison = document.getElementById('date-livraison');
-    const today = new Date();
-    today.setDate(today.getDate() + 7);
-    const minDate = today.toISOString().split('T')[0];
-    dateLivraison.min = minDate;
-    dateLivraison.value = minDate;
+{% endblock %}
 
-    // Calcul des totaux
-    const inputs = document.querySelectorAll('.quantite-commande-input');
-
-    inputs.forEach(input => {
-        input.addEventListener('input', () => {
-            const prix = parseFloat(input.dataset.prix) || 0;
-            const quantite = parseInt(input.value) || 0;
-            const ligneSousTotal = input.closest('.produit-ligne').querySelector('.sous-total-ligne');
-            ligneSousTotal.textContent = (prix * quantite).toFixed(2) + ' €';
-            calculerTotal();
-        });
-    });
-
-    function calculerTotal() {
-        let totalPrix = 0, totalQuantite = 0;
-        inputs.forEach(input => {
-            const prix = parseFloat(input.dataset.prix) || 0;
-            const quantite = parseInt(input.value) || 0;
-            totalPrix += prix * quantite;
-            totalQuantite += quantite;
-        });
-        document.getElementById('total-commande').textContent = totalPrix.toFixed(2) + ' €';
-        document.getElementById('total-quantite').textContent = totalQuantite;
-    }
-});
-</script>
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/commander.js' %}?v=6"></script>
 {% endblock %}

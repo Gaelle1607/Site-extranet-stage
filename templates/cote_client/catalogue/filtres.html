@@ -11,7 +11,7 @@
                     <label class="form-label">Recherche</label>
                     <input type="text" name="q" class="form-control" value="{{ recherche }}" placeholder="Nom, référence...">
                 </div>
-
+                {% comment %}
                 <!-- Sélection catégorie -->
                 <div class="mb-3">
                     <label class="form-label">Catégorie</label>
@@ -24,13 +24,13 @@
                         {% endfor %}
                     </select>
                 </div>
-
+                {% endcomment %}
                 <!-- Boutons filtrer / réinitialiser -->
                 <button type="submit" class="btn btn-primary w-100 mb-2">
                     <i class="bi bi-search"></i> Filtrer
                 </button>
                 {% if recherche or categorie_active %}
-                <a href="{% url 'catalogue:liste' %}" class="btn btn-outline-secondary w-100">
+                <a href="{{ request.path }}" class="btn btn-outline-secondary w-100">
                     <i class="bi bi-x-circle"></i> Enlever le filtre
                 </a>
                 {% endif %}

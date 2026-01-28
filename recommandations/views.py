@@ -17,6 +17,13 @@ def mes_recommandations(request):
     recommandations = obtenir_recommandations(utilisateur, limite=12)
     categories = get_categories_client(utilisateur)
 
+    # Recherche
+    recherche = request.GET.get('q', '').strip().lower()
+    if recherche:
+        recommandations = [p for p in recommandations if
+                    recherche in p.get('nom', '').lower() or
+                    recherche in p.get('reference', '').lower()]
+
     # Récupérer le panier pour le récap
     panier = request.session.get('panier', {})
     lignes_panier = []
@@ -37,6 +44,7 @@ def mes_recommandations(request):
     context = {
         'recommandations': recommandations,
         'categories': categories,
+        'recherche': request.GET.get('q', ''),
         'lignes_panier': lignes_panier,
         'total_panier': total_panier,
     }

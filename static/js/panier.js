@@ -134,6 +134,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attacher les listeners pour le récap panier (page catalogue)
     attachSupprimerRecapListeners();
+
+    // Date de livraison minimum (aujourd'hui + 7 jours)
+    const dateLivraison = document.getElementById('date-livraison');
+    if (dateLivraison) {
+        const today = new Date();
+        today.setDate(today.getDate() + 7);
+        const minDate = today.toISOString().split('T')[0];
+        dateLivraison.min = minDate;
+        dateLivraison.value = minDate;
+    }
 });
 
 function submitQuantiteForm(form) {

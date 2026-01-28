@@ -13,8 +13,8 @@
             {% csrf_token %}
             <div class="mb-3">
                 <label for="client-search" class="form-label">Nom de l'entreprise</label>
-                <input type="text" class="form-control" id="client-search" placeholder="Tapez au moins 2 caractères pour rechercher du nom, de la ville ou du tiers" autocomplete="off">
-                <input type="hidden" id="client" name="client" required>
+                <input type="text" class="form-control" id="client-search" placeholder="Tapez au moins 2 caractères pour rechercher du nom, de la ville ou du tiers" autocomplete="off" value="{{ prefill_nom }}">
+                <input type="hidden" id="client" name="client" value="{{ prefill_tiers }}" required>
                 <div id="search-results" class="list-group mt-1" style="position: absolute; z-index: 1000; max-height: 300px; overflow-y: auto;"></div>
                 <small class="text-muted">Recherchez et sélectionnez le client</small>
                 <div id="selected-client" class="mt-2"></div>
@@ -22,7 +22,7 @@
 
             <div class="mb-3">
                 <label for="username" class="form-label">Nom d'utilisateur</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+                <input type="text" class="form-control" id="username" name="username" value="{{ prefill_nom }}" required>
             </div>
 
             <div class="mb-3">
@@ -81,6 +81,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsDiv = document.getElementById('search-results');
     const selectedDiv = document.getElementById('selected-client');
     let debounceTimer;
+
+    // Pré-remplissage depuis le cadencier
+    if (hiddenInput.value && searchInput.value) {
+        selectedDiv.innerHTML = `<span class="badge bg-success"><i class="bi bi-check"></i> ${searchInput.value} (${hiddenInput.value})</span>`;
+    }
 
     searchInput.addEventListener('input', function() {
         clearTimeout(debounceTimer);

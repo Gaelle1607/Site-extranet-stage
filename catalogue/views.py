@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import Http404
+from django.db.models import Sum
 from decimal import Decimal
 from .services import get_produits_client, get_categories_client, get_produit_by_reference, get_client_distant
 from commandes.models import Commande, LigneCommande
@@ -29,21 +30,23 @@ def liste_produits(request):
                     recherche in p.get('nom', '').lower() or
                     recherche in p.get('reference', '').lower()]
 
-    # Séparer les produits favoris (nb_commandes >= 15)
-    # Uniquement si pas de filtre actif
+    # Top 4 des produits les plus commandés sur le site (commandes locales)
     produits_favoris = []
     if not categorie and not recherche:
-        produits_favoris = [p for p in produits if p.get('nb_commandes', 0) >= 15]
-        # Trier par nombre de commandes décroissant
-        produits_favoris = sorted(produits_favoris, key=lambda x: x.get('nb_commandes', 0), reverse=True)
-        # Limiter à 4 favoris max
-        produits_favoris = produits_favoris[:4]
+        top_references = (
+            LigneCommande.objects
+            .filter(commande__utilisateur=utilisateur)
+            .values('reference_produit')
+            .annotate(total_commande=Sum('quantite'))
+            .order_by('-total_commande')[:4]
+        )
+        for entry in top_references:
+            produit = get_produit_by_reference(utilisateur, entry['reference_produit'])
+            if produit:
+                produits_favoris.append(produit)
         # Retirer les favoris de la liste principale
         refs_favoris = {p['reference'] for p in produits_favoris}
         produits = [p for p in produits if p['reference'] not in refs_favoris]
-
-    # Trier les produits par nombre de commandes décroissant
-    produits = sorted(produits, key=lambda x: x.get('nb_commandes', 0), reverse=True)
 
     # Récupérer le panier pour le récap
     panier = request.session.get('panier', {})
@@ -81,18 +84,23 @@ def favoris(request):
         messages.error(request, "Votre compte n'est pas associé à un profil utilisateur. Contactez l'administrateur.")
         return redirect('clients:connexion')
     utilisateur = request.user.utilisateur
-    produits = get_produits_client(utilisateur)
-    categories = get_categories_client(utilisateur)
 
-    # Filtrer les produits favoris (nb_commandes >= 15)
-    produits_favoris = [p for p in produits if p.get('nb_commandes', 0) >= 15]
-    # Trier par nombre de commandes décroissant
-    produits_favoris = sorted(produits_favoris, key=lambda x: x.get('nb_commandes', 0), reverse=True)
+    # Top 10 des produits les plus commandés sur le site par cet utilisateur
+    top_references = (
+        LigneCommande.objects
+        .filter(commande__utilisateur=utilisateur)
+        .values('reference_produit')
+        .annotate(total_commande=Sum('quantite'))
+        .order_by('-total_commande')[:10]
+    )
 
-    # Filtrer par catégorie
-    categorie = request.GET.get('categorie')
-    if categorie:
-        produits_favoris = [p for p in produits_favoris if categorie in p.get('categories', [])]
+    # Récupérer les infos complètes de chaque produit
+    produits_favoris = []
+    for entry in top_references:
+        produit = get_produit_by_reference(utilisateur, entry['reference_produit'])
+        if produit:
+            produit['total_commande'] = entry['total_commande']
+            produits_favoris.append(produit)
 
     # Recherche
     recherche = request.GET.get('q', '').strip().lower()
@@ -120,8 +128,6 @@ def favoris(request):
 
     context = {
         'produits_favoris': produits_favoris,
-        'categories': categories,
-        'categorie_active': categorie,
         'recherche': request.GET.get('q', ''),
         'lignes_panier': lignes_panier,
         'total_panier': total_panier,
@@ -179,15 +185,17 @@ def commander(request):
 
         if not lignes:
             messages.warning(request, 'Veuillez sélectionner au moins un produit.')
-            return redirect('catalogue:passee_commande')
+            return redirect('catalogue:commander')
 
-        # Récupérer les commentaires
+        # Récupérer les commentaires et la date de livraison
         commentaires = request.POST.get('commentaires', '')
+        date_livraison = request.POST.get('date_livraison') or None
 
         # Créer la commande
         commande = Commande.objects.create(
             utilisateur=utilisateur,
             numero=Commande.generer_numero(),
+            date_livraison=date_livraison,
             total_ht=Decimal(str(total)),
             commentaire=commentaires,
             statut='en_attente'
@@ -206,6 +214,11 @@ def commander(request):
 
         messages.success(request, f'Votre commande n°{commande.numero} a été envoyée avec succès !')
         return redirect('commandes:confirmation')
+
+    # Pré-remplir avec les quantités du panier
+    panier = request.session.get('panier', {})
+    for produit in produits:
+        produit['panier_qte'] = panier.get(produit['reference'], 0)
 
     context = {
         'client': client_distant,

@@ -32,7 +32,7 @@
         </div>
         {% endif %}
 
-        <!-- Carte prix et stock -->
+        <!-- Carte prix -->
         <div class="card bg-light mb-4">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -40,34 +40,17 @@
                         <span class="h2 text-primary">{{ produit.prix|floatformat:2 }} €</span>
                         <span class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</span>
                     </div>
-
-                    <!-- Badge stock -->
-                    {% if produit.stock is not None or produit.stock > 0 %}
-                    <div class="col-auto">
-                        <span class="badge {% if produit.stock > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6">
-                            {% if produit.stock == 1 %}
-                                <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }} {{ produit.unite }}
-                            {% elif produit.stock > 1 %}
-                                <i class="bi bi-check-circle"></i> En stock : {{ produit.stock }} {{ produit.unite }}s
-                            {% else %}
-                                <i class="bi bi-x-circle"></i> Rupture de stock
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Formulaire ajout au panier si disponible -->
-        {% if produit.stock is None or produit.stock > 0 %}
+        <!-- Formulaire ajout au panier -->
         <form method="post" action="{% url 'commandes:ajouter' %}" class="mb-4 ajouter-panier-form">
             {% csrf_token %}
             <input type="hidden" name="reference" value="{{ produit.reference }}">
             <div class="row g-2">
                 <div class="col-auto">
                     <input type="number" name="quantite" value="1" min="1"
-                        {% if produit.stock %}max="{{ produit.stock }}"{% endif %}
                         class="form-control" style="width: 100px;">
                 </div>
                 <div class="col">
@@ -77,11 +60,6 @@
                 </div>
             </div>
         </form>
-        {% else %}
-        <div class="text-center text-muted mb-4 py-2">
-            <i class="bi bi-x-circle"></i> Indisponible
-        </div>
-        {% endif %}
 
         <!-- Description du produit -->
         {% if produit.description %}
