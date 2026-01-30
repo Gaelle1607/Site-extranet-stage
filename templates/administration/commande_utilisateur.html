@@ -20,9 +20,9 @@
                             <th>Numéro</th>
                             <th>Date</th>
                             <th>Date de livraison</th>
+                            <th>Départ camions</th>
                             <th>Articles</th>
                             <th>Total HT</th>
-                            <th>Statut</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -32,25 +32,9 @@
                             <td><strong>{{ commande.numero }}</strong></td>
                             <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
                             <td>{{ commande.date_livraison|date:"d/m/Y"|default:"Non définie" }}</td>
+                            <td>{{ commande.date_depart_camions|date:"d/m/Y"|default:"Non définie" }}</td>
                             <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
                             <td>{{ commande.total_ht|floatformat:2 }} €</td>
-
-                            <!-- Statut avec badge coloré -->
-                            <td>
-                                {% if commande.statut == 'en_attente' %}
-                                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'confirmee' %}
-                                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'en_preparation' %}
-                                    <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'expediee' or commande.statut == 'livree' %}
-                                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'annulee' %}
-                                    <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
-                                {% endif %}
-                            </td>
 
                             <!-- Actions -->
                             <td class="text-end">

@@ -1,0 +1,77 @@
+{% extends 'administration/base_admin.html' %}
+{% load static %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-circle"></i> Mon profil</h1>
+</div>
+
+<div class="row">
+    <!-- Informations du compte -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Informations du compte</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nom d'utilisateur :</strong> {{ request.user.username }}</p>
+                <p><strong>Date de création :</strong> {{ request.user.date_joined|date:"d/m/Y H:i" }}</p>
+                <p><strong>Dernière connexion :</strong> {{ request.user.last_login|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changement de mot de passe -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-key"></i> Changer le mot de passe</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'administration:changer_mot_de_passe_admin' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="ancien_mdp" class="form-label">Mot de passe actuel</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="ancien_mdp" name="ancien_mdp" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="ancien_mdp">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nouveau_mdp" class="form-label">Nouveau mot de passe</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nouveau_mdp">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Au moins 4 caractères.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_mdp" class="form-label">Confirmer le nouveau mot de passe</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required>
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_mdp">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Modifier le mot de passe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/toggle-password.js' %}"></script>
+{% endblock %}

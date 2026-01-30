@@ -21,23 +21,8 @@
                 </div>
                 <div class="col-md-6">
                     <p><strong>Date de commande :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Départ des camions :</strong> {{ commande.date_depart_camions|date:"d/m/Y"|default:"Non définie" }}</p>
                     <p><strong>Date de livraison prévue :</strong> {{ commande.date_livraison|date:"d/m/Y"|default:"Non définie" }}</p>
-                    <!-- Statut de la commande avec badge coloré -->
-                    <p><strong>Statut :</strong>
-                        {% if commande.statut == 'en_attente' %}
-                            <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                        {% elif commande.statut == 'confirmee' %}
-                            <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                        {% elif commande.statut == 'en_preparation' %}
-                            <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                        {% elif commande.statut == 'expediee' or commande.statut == 'livree' %}
-                            <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                        {% elif commande.statut == 'annulee' %}
-                            <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
-                        {% endif %}
-                    </p>
                 </div>
             </div>
 

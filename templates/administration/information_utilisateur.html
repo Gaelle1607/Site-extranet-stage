@@ -1,4 +1,5 @@
 {% extends 'administration/base_admin.html' %}
+{% load static %}
 
 {% block title %}Information - {{ utilisateur.user.username }}{% endblock %}
 
@@ -15,13 +16,6 @@
             <div class="card-body">
                 <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.user.username }}</p>
                 <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
-                <p><strong>Statut :</strong>
-                    {% if utilisateur.actif %}
-                        <span class="badge bg-success">Actif</span>
-                    {% else %}
-                        <span class="badge bg-danger">Inactif</span>
-                    {% endif %}
-                </p>
                 <p><strong>Date d'inscription :</strong> {{ utilisateur.user.date_joined|date:"d/m/Y H:i" }}</p>
                 <p><strong>Derniere connexion :</strong> {{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</p>
             </div>
@@ -43,8 +37,11 @@
                     {% if client.adresse %}
                         <p><strong>Adresse :</strong> {{ client.adresse }}</p>
                     {% endif %}
-                    {% if client.cp or client.acheminement %}
-                        <p><strong>Ville :</strong> {{ client.cp }} {{ client.acheminement }}</p>
+                    {% if client.cp %}
+                        <p><strong>Code postal :</strong> {{ client.cp }}</p>
+                    {% endif %}
+                    {% if client.acheminement %}
+                        <p><strong>Ville :</strong> {{ client.acheminement }}</p>
                     {% endif %}
                 {% else %}
                     <p class="text-muted">Aucune information client trouvee dans la base distante.</p>
@@ -65,11 +62,21 @@
             <div class="row">
                 <div class="col-md-5 mb-3">
                     <label for="nouveau_mdp" class="form-label">Nouveau mot de passe</label>
-                    <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required>
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nouveau_mdp">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-md-5 mb-3">
                     <label for="confirm_mdp" class="form-label">Confirmer le mot de passe</label>
-                    <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required>
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_mdp">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-md-2 mb-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-warning w-100">
@@ -91,4 +98,5 @@
     <i class="bi bi-cart2"></i> Voir les commandes
 </a>
 
+<script src="{% static 'js/toggle-password.js' %}"></script>
 {% endblock %}

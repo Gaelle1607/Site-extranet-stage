@@ -4,35 +4,83 @@ from django.contrib import messages
 from django.http import Http404
 from django.db.models import Sum
 from decimal import Decimal
-from .services import get_produits_client, get_categories_client, get_produit_by_reference, get_client_distant
+import traceback
+from .services import get_produits_client, get_categories_client, get_produit_by_reference, get_client_distant, FILTRES_DISPONIBLES, generer_filtres_automatiques, _normaliser
 from commandes.models import Commande, LigneCommande
+from commandes.services import generer_csv_edi
 
 
 @login_required
 def liste_produits(request):
     """Liste des produits pour le client connecté"""
+
     if not hasattr(request.user, 'utilisateur'):
-        messages.error(request, "Votre compte n'est pas associé à un profil utilisateur. Contactez l'administrateur.")
+        messages.error(
+            request,
+            "Votre compte n'est pas associé à un profil utilisateur. Contactez l'administrateur."
+        )
         return redirect('clients:connexion')
+
     utilisateur = request.user.utilisateur
     produits = get_produits_client(utilisateur)
-    categories = get_categories_client(utilisateur)
 
-    # Filtrer par catégorie
-    categorie = request.GET.get('categorie')
-    if categorie:
-        produits = [p for p in produits if categorie in p.get('categories', [])]
+    # Générer les filtres automatiques à partir des libellés
+    filtres_auto = generer_filtres_automatiques(produits, seuil_occurrences=3)
 
-    # Recherche
+    # Ajouter les tags automatiques aux produits
+    for produit in produits:
+        libelle_normalise = _normaliser(produit.get('libelle', '') or '')
+        for code, info in filtres_auto.items():
+            if any(terme in libelle_normalise for terme in info["termes"]):
+                if code not in produit.get('tags', []):
+                    produit['tags'].append(code)
+
+    # Collecter tous les tags présents dans le catalogue du client
+    tags_disponibles = set()
+    for p in produits:
+        tags_disponibles.update(p.get('tags', []))
+
+    # Filtres groupés pour le template, filtrés par tags disponibles
+    filtres_groupes = {}
+    for groupe, filtres in FILTRES_DISPONIBLES.items():
+        filtres_groupe = {
+            code: info["label"]
+            for code, info in filtres.items()
+            if code in tags_disponibles
+        }
+        # N'ajouter le groupe que s'il contient au moins un filtre
+        if filtres_groupe:
+            filtres_groupes[groupe] = filtres_groupe
+
+    # Ajouter les filtres automatiques comme groupe séparé
+    if filtres_auto:
+        filtres_groupes["Filtres personnalisés"] = {
+            code: info["label"]
+            for code, info in filtres_auto.items()
+        }
+
+    # Filtres actifs (checkbox)
+    filtres_actifs = request.GET.getlist("filtre")
+
+    # Recherche texte
     recherche = request.GET.get('q', '').strip().lower()
     if recherche:
-        produits = [p for p in produits if
-                    recherche in p.get('nom', '').lower() or
-                    recherche in p.get('reference', '').lower()]
+        produits = [
+            p for p in produits
+            if recherche in p.get('nom', '').lower()
+            or recherche in p.get('reference', '').lower()
+        ]
 
-    # Top 4 des produits les plus commandés sur le site (commandes locales)
+    # Application des filtres
+    if filtres_actifs:
+        produits = [
+            p for p in produits
+            if any(f in p.get('tags', []) for f in filtres_actifs)
+        ]
+
+    # Produits favoris (uniquement sans filtre ni recherche)
     produits_favoris = []
-    if not categorie and not recherche:
+    if not filtres_actifs and not recherche:
         top_references = (
             LigneCommande.objects
             .filter(commande__utilisateur=utilisateur)
@@ -40,18 +88,26 @@ def liste_produits(request):
             .annotate(total_commande=Sum('quantite'))
             .order_by('-total_commande')[:4]
         )
+
         for entry in top_references:
-            produit = get_produit_by_reference(utilisateur, entry['reference_produit'])
+            produit = get_produit_by_reference(
+                utilisateur,
+                entry['reference_produit']
+            )
             if produit:
                 produits_favoris.append(produit)
-        # Retirer les favoris de la liste principale
-        refs_favoris = {p['reference'] for p in produits_favoris}
-        produits = [p for p in produits if p['reference'] not in refs_favoris]
 
-    # Récupérer le panier pour le récap
+        refs_favoris = {p['reference'] for p in produits_favoris}
+        produits = [
+            p for p in produits
+            if p['reference'] not in refs_favoris
+        ]
+
+    # Panier
     panier = request.session.get('panier', {})
     lignes_panier = []
     total_panier = 0
+
     for reference, quantite in panier.items():
         produit = get_produit_by_reference(utilisateur, reference)
         if produit:
@@ -68,13 +124,19 @@ def liste_produits(request):
     context = {
         'produits': produits,
         'produits_favoris': produits_favoris,
-        'categories': categories,
-        'categorie_active': categorie,
+        'filtres_groupes': filtres_groupes,
+        'filtres_actifs': filtres_actifs,
         'recherche': request.GET.get('q', ''),
         'lignes_panier': lignes_panier,
         'total_panier': total_panier,
     }
-    return render(request, 'cote_client/catalogue/liste.html', context)
+
+    return render(
+        request,
+        'cote_client/catalogue/liste.html',
+        context
+    )
+
 
 
 @login_required
@@ -85,13 +147,13 @@ def favoris(request):
         return redirect('clients:connexion')
     utilisateur = request.user.utilisateur
 
-    # Top 10 des produits les plus commandés sur le site par cet utilisateur
+    # Top 12 des produits les plus commandés sur le site par cet utilisateur
     top_references = (
         LigneCommande.objects
         .filter(commande__utilisateur=utilisateur)
         .values('reference_produit')
         .annotate(total_commande=Sum('quantite'))
-        .order_by('-total_commande')[:10]
+        .order_by('-total_commande')[:12]
     )
 
     # Récupérer les infos complètes de chaque produit
@@ -102,12 +164,56 @@ def favoris(request):
             produit['total_commande'] = entry['total_commande']
             produits_favoris.append(produit)
 
+    # Générer les filtres automatiques à partir des libellés des favoris
+    filtres_auto = generer_filtres_automatiques(produits_favoris, seuil_occurrences=2)
+
+    # Ajouter les tags automatiques aux produits favoris
+    for produit in produits_favoris:
+        libelle_normalise = _normaliser(produit.get('libelle', '') or '')
+        for code, info in filtres_auto.items():
+            if any(terme in libelle_normalise for terme in info["termes"]):
+                if code not in produit.get('tags', []):
+                    produit['tags'].append(code)
+
+    # Collecter tous les tags présents dans les favoris
+    tags_disponibles = set()
+    for p in produits_favoris:
+        tags_disponibles.update(p.get('tags', []))
+
+    # Filtres groupés pour le template, filtrés par tags disponibles
+    filtres_groupes = {}
+    for groupe, filtres in FILTRES_DISPONIBLES.items():
+        filtres_groupe = {
+            code: info["label"]
+            for code, info in filtres.items()
+            if code in tags_disponibles
+        }
+        if filtres_groupe:
+            filtres_groupes[groupe] = filtres_groupe
+
+    # Ajouter les filtres automatiques comme groupe séparé
+    if filtres_auto:
+        filtres_groupes["Filtres personnalisés"] = {
+            code: info["label"]
+            for code, info in filtres_auto.items()
+        }
+
+    # Filtres actifs (checkbox)
+    filtres_actifs = request.GET.getlist("filtre")
+
     # Recherche
     recherche = request.GET.get('q', '').strip().lower()
     if recherche:
         produits_favoris = [p for p in produits_favoris if
                     recherche in p.get('nom', '').lower() or
                     recherche in p.get('reference', '').lower()]
+
+    # Application des filtres
+    if filtres_actifs:
+        produits_favoris = [
+            p for p in produits_favoris
+            if any(f in p.get('tags', []) for f in filtres_actifs)
+        ]
 
     # Récupérer le panier pour le récap
     panier = request.session.get('panier', {})
@@ -128,6 +234,8 @@ def favoris(request):
 
     context = {
         'produits_favoris': produits_favoris,
+        'filtres_groupes': filtres_groupes,
+        'filtres_actifs': filtres_actifs,
         'recherche': request.GET.get('q', ''),
         'lignes_panier': lignes_panier,
         'total_panier': total_panier,
@@ -187,18 +295,19 @@ def commander(request):
             messages.warning(request, 'Veuillez sélectionner au moins un produit.')
             return redirect('catalogue:commander')
 
-        # Récupérer les commentaires et la date de livraison
+        # Récupérer les commentaires et les dates
         commentaires = request.POST.get('commentaires', '')
         date_livraison = request.POST.get('date_livraison') or None
+        date_depart_camions = request.POST.get('date_depart_camions') or None
 
         # Créer la commande
         commande = Commande.objects.create(
             utilisateur=utilisateur,
             numero=Commande.generer_numero(),
             date_livraison=date_livraison,
+            date_depart_camions=date_depart_camions,
             total_ht=Decimal(str(total)),
-            commentaire=commentaires,
-            statut='en_attente'
+            commentaire=commentaires
         )
 
         # Créer les lignes de commande
@@ -211,6 +320,20 @@ def commander(request):
                 prix_unitaire=Decimal(str(ligne['prix'])),
                 total_ligne=Decimal(str(ligne['total']))
             )
+
+        # Générer le fichier CSV EDI
+        try:
+            csv_path = generer_csv_edi(commande, client_distant, lignes)
+            print(f"Fichier EDI généré: {csv_path}")
+            messages.info(request, f"Fichier EDI généré: {csv_path}")
+        except Exception as e:
+            error_msg = f"Erreur génération EDI: {e}\n{traceback.format_exc()}"
+            print(error_msg)
+            messages.warning(request, f"Erreur génération EDI: {e}")
+
+        # Vider le panier
+        request.session['panier'] = {}
+        request.session.modified = True
 
         messages.success(request, f'Votre commande n°{commande.numero} a été envoyée avec succès !')
         return redirect('commandes:confirmation')

@@ -3,7 +3,9 @@ from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
+from django.contrib.auth.models import User
 from .forms import ConnexionForm
+from .models import Utilisateur, DemandeMotDePasse
 from catalogue.services import get_client_distant
 
 
@@ -30,10 +32,6 @@ def connexion(request):
                 login(request, user)
                 messages.success(request, f"Bienvenue, {user.username} !")
                 return redirect('administration:dashboard')
-            # Vérifier que l'utilisateur est actif
-            if hasattr(user, 'utilisateur') and not user.utilisateur.actif:
-                messages.error(request, "Votre compte est désactivé. Contactez votre commercial.")
-                return render(request, 'cote_client/clients/connexion.html', {'form': form})
             login(request, user)
             # Récupérer le nom du client distant
             if hasattr(user, 'utilisateur'):
@@ -95,3 +93,36 @@ def modifier_mot_de_passe(request):
         'utilisateur': utilisateur,
         'client': client_distant
     })
+
+
+def demande_mot_de_passe(request):
+    """Enregistre une demande de réinitialisation de mot de passe"""
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+
+        if not username:
+            messages.error(request, "Veuillez entrer votre identifiant.")
+            return redirect('clients:connexion')
+
+        # Chercher l'utilisateur
+        try:
+            user = User.objects.get(username=username)
+            if hasattr(user, 'utilisateur'):
+                utilisateur = user.utilisateur
+                # Vérifier s'il n'y a pas déjà une demande non traitée
+                demande_existante = DemandeMotDePasse.objects.filter(
+                    utilisateur=utilisateur,
+                    traitee=False
+                ).exists()
+
+                if demande_existante:
+                    messages.info(request, "Une demande est déjà en cours de traitement pour ce compte.")
+                else:
+                    DemandeMotDePasse.objects.create(utilisateur=utilisateur)
+                    messages.success(request, "Votre demande a été envoyée. L'administrateur vous contactera prochainement.")
+            else:
+                messages.error(request, "Aucun compte client trouvé avec cet identifiant.")
+        except User.DoesNotExist:
+            messages.error(request, "Aucun compte trouvé avec cet identifiant.")
+
+    return redirect('clients:connexion')

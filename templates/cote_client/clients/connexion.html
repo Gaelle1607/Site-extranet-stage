@@ -58,6 +58,13 @@
                         Se connecter <i class="bi bi-arrow-right ms-2"></i>
                     </button>
                 </form>
+
+                <!-- Lien mot de passe oublié -->
+                <div class="text-center mt-3">
+                    <a href="#" class="text-muted small" data-bs-toggle="modal" data-bs-target="#modalMdpOublie">
+                        <i class="bi bi-key"></i> Mot de passe oublié ?
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -65,6 +72,41 @@
         <p class="text-center text-muted mt-4">
             <small>Contactez votre commercial pour obtenir vos identifiants</small>
         </p>
+
+        <!-- Lien discret pour admin -->
+        <p class="text-center mt-2">
+            <a href="{% url 'administration:reset_password_admin' %}" class="text-muted small" style="opacity: 0.6;">
+                <i class="bi bi-shield-lock"></i> Accès administrateur
+            </a>
+        </p>
+    </div>
+</div>
+
+<!-- Modal mot de passe oublié -->
+<div class="modal fade" id="modalMdpOublie" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-key"></i> Mot de passe oublié</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'clients:demande_mdp' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted">Entrez votre identifiant. Votre demande sera transmise à l'administrateur qui réinitialisera votre mot de passe.</p>
+                    <div class="mb-3">
+                        <label for="username_mdp" class="form-label">Identifiant</label>
+                        <input type="text" class="form-control" id="username_mdp" name="username" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Envoyer la demande
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

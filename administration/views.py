@@ -7,7 +7,8 @@ from django.db.models.functions import Cast
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.db import connections
-from clients.models import Utilisateur
+from django.utils import timezone
+from clients.models import Utilisateur, DemandeMotDePasse
 from commandes.models import Commande
 from catalogue.services import get_produits_client
 from catalogue.models import ComCli
@@ -38,11 +39,62 @@ def dashboard(request):
         cursor.execute("SELECT COUNT(*) FROM (SELECT 1 FROM comcli WHERE tiers != 0 GROUP BY tiers, complement) t")
         nb_clients = cursor.fetchone()[0]
 
+    # Récupérer les dernières activités
+    dernieres_commandes = Commande.objects.select_related('utilisateur', 'utilisateur__user').order_by('-date_commande')[:5]
+    derniers_utilisateurs = Utilisateur.objects.filter(
+        user__is_staff=False, user__is_superuser=False
+    ).select_related('user').order_by('-user__date_joined')[:5]
+
+    # Construire la liste des activités récentes
+    activites = []
+
+    for commande in dernieres_commandes:
+        # Récupérer le nom du client
+        client = commande.utilisateur.get_client_distant()
+        nom_client = client.nom if client else commande.utilisateur.code_tiers
+        activites.append({
+            'type': 'commande',
+            'date': commande.date_commande,
+            'description': f"Nouvelle commande {commande.numero} passée par {nom_client}",
+            'commande': commande,
+        })
+
+    for utilisateur in derniers_utilisateurs:
+        client = utilisateur.get_client_distant()
+        nom_client = client.nom if client else utilisateur.code_tiers
+        activites.append({
+            'type': 'utilisateur',
+            'date': utilisateur.user.date_joined,
+            'description': f"Nouvel utilisateur créé : {nom_client} ({utilisateur.user.username})",
+            'utilisateur': utilisateur,
+        })
+
+    # Trier par date décroissante et prendre les 5 dernières
+    activites.sort(key=lambda x: x['date'], reverse=True)
+    activites = activites[:5]
+
+    # Récupérer les demandes de mot de passe non traitées
+    demandes_mdp = DemandeMotDePasse.objects.filter(traitee=False).select_related(
+        'utilisateur', 'utilisateur__user'
+    ).order_by('-date_demande')
+
+    # Enrichir avec le nom du client
+    demandes_mdp_liste = []
+    for demande in demandes_mdp:
+        client = demande.utilisateur.get_client_distant()
+        demandes_mdp_liste.append({
+            'demande': demande,
+            'nom_client': client.nom if client else demande.utilisateur.code_tiers,
+        })
+
     context = {
         'page_title': 'Administration',
         'nb_utilisateurs': nb_utilisateurs,
         'nb_commandes': nb_commandes,
         'nb_clients': nb_clients,
+        'activites': activites,
+        'demandes_mdp': demandes_mdp_liste,
+        'nb_demandes_mdp': len(demandes_mdp_liste),
     }
     return render(request, 'administration/dashboard.html', context)
 
@@ -54,12 +106,9 @@ def liste_commande(request):
     # Recherche
     query = request.GET.get('q', '')
     if query:
-        # Convertir les espaces en underscores pour la recherche de statut
-        query_statut = query.replace(' ', '_')
         commandes = commandes.filter(
             Q(numero__icontains=query) |
-            Q(utilisateur__code_tiers__icontains=query) |
-            Q(statut__icontains=query_statut)
+            Q(utilisateur__code_tiers__icontains=query)
         )
 
     commandes = commandes[:50]
@@ -107,21 +156,41 @@ def catalogue_utilisateurs(request):
     # Exclure les staff et superusers
     utilisateurs = Utilisateur.objects.filter(user__is_staff=False, user__is_superuser=False)
 
-    # Récupérer tous les codes tiers des utilisateurs
-    codes_tiers = [u.code_tiers for u in utilisateurs]
+    # Récupérer tous les codes tiers des utilisateurs (convertis en entiers)
+    codes_tiers = []
+    for u in utilisateurs:
+        try:
+            codes_tiers.append(int(u.code_tiers))
+        except (ValueError, TypeError):
+            pass
 
-    # Récupérer tous les clients distants en UNE seule requête
-    clients_distants = {c.tiers: c for c in ComCli.objects.using('logigvd').filter(tiers__in=codes_tiers)}
+    # Récupérer les noms des clients avec MAX(nom) comme dans catalogue_clients
+    clients_distants = {}
+    if codes_tiers:
+        placeholders = ','.join(['%s'] * len(codes_tiers))
+        with connections['logigvd'].cursor() as cursor:
+            cursor.execute(f"""
+                SELECT tiers, MAX(nom) as nom
+                FROM comcli
+                WHERE tiers IN ({placeholders})
+                GROUP BY tiers
+            """, codes_tiers)
+            for row in cursor.fetchall():
+                clients_distants[row[0]] = row[1]
 
     # Enrichir avec les infos de la base distante
     clients_avec_infos = []
     for utilisateur in utilisateurs:
-        client_distant = clients_distants.get(utilisateur.code_tiers)
-        if client_distant:
+        try:
+            code_tiers_int = int(utilisateur.code_tiers)
+            nom_client = clients_distants.get(code_tiers_int)
+        except (ValueError, TypeError):
+            nom_client = None
+        if nom_client:
             clients_avec_infos.append({
                 'id': utilisateur.id,
                 'utilisateur': utilisateur,
-                'nom': client_distant.nom,
+                'nom': nom_client,
                 'code_tiers': utilisateur.code_tiers,
             })
         else:
@@ -273,6 +342,13 @@ def changer_mot_de_passe(request, utilisateur_id):
     else:
         utilisateur.user.set_password(nouveau_mdp)
         utilisateur.user.save()
+
+        # Marquer les demandes de mot de passe comme traitées
+        DemandeMotDePasse.objects.filter(
+            utilisateur=utilisateur,
+            traitee=False
+        ).update(traitee=True, date_traitement=timezone.now())
+
         messages.success(request, f'Mot de passe de {utilisateur.user.username} modifié avec succès.')
 
     return redirect('administration:information_utilisateur', utilisateur_id=utilisateur_id)
@@ -390,3 +466,76 @@ def recherche_clients_api(request):
     result = [{'tiers': row[0], 'nom': row[1], 'complement': row[2] or ''} for row in rows]
 
     return JsonResponse({'clients': result})
+
+
+@admin_required
+def profil_admin(request):
+    """Page de profil de l'administrateur"""
+    context = {
+        'page_title': 'Mon profil',
+    }
+    return render(request, 'administration/profil_admin.html', context)
+
+
+@admin_required
+@require_POST
+def changer_mot_de_passe_admin(request):
+    """Changer le mot de passe de l'administrateur connecté"""
+    ancien_mdp = request.POST.get('ancien_mdp', '')
+    nouveau_mdp = request.POST.get('nouveau_mdp', '')
+    confirm_mdp = request.POST.get('confirm_mdp', '')
+
+    if not request.user.check_password(ancien_mdp):
+        messages.error(request, 'Le mot de passe actuel est incorrect.')
+    elif not nouveau_mdp:
+        messages.error(request, 'Le nouveau mot de passe ne peut pas être vide.')
+    elif nouveau_mdp != confirm_mdp:
+        messages.error(request, 'Les mots de passe ne correspondent pas.')
+    elif len(nouveau_mdp) < 4:
+        messages.error(request, 'Le mot de passe doit contenir au moins 4 caractères.')
+    else:
+        request.user.set_password(nouveau_mdp)
+        request.user.save()
+        # Reconnecter l'utilisateur pour éviter la déconnexion
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(request, request.user)
+        messages.success(request, 'Votre mot de passe a été modifié avec succès.')
+
+    return redirect('administration:profil_admin')
+
+
+def reset_password_admin(request):
+    """
+    Page de réinitialisation du mot de passe admin avec clé secrète.
+    Accessible sans authentification mais nécessite la clé secrète du serveur.
+    """
+    from .reset_key import RESET_SECRET_KEY
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        secret_key = request.POST.get('secret_key', '').strip()
+        nouveau_mdp = request.POST.get('nouveau_mdp', '')
+        confirm_mdp = request.POST.get('confirm_mdp', '')
+
+        # Vérifier la clé secrète
+        if secret_key != RESET_SECRET_KEY:
+            messages.error(request, 'Clé secrète incorrecte.')
+        elif not username:
+            messages.error(request, 'Veuillez entrer un nom d\'utilisateur.')
+        elif not nouveau_mdp:
+            messages.error(request, 'Le nouveau mot de passe ne peut pas être vide.')
+        elif nouveau_mdp != confirm_mdp:
+            messages.error(request, 'Les mots de passe ne correspondent pas.')
+        elif len(nouveau_mdp) < 4:
+            messages.error(request, 'Le mot de passe doit contenir au moins 4 caractères.')
+        else:
+            try:
+                user = User.objects.get(username=username, is_staff=True)
+                user.set_password(nouveau_mdp)
+                user.save()
+                messages.success(request, f'Mot de passe de {username} réinitialisé avec succès. Vous pouvez maintenant vous connecter.')
+                return redirect('clients:connexion')
+            except User.DoesNotExist:
+                messages.error(request, 'Aucun administrateur trouvé avec ce nom d\'utilisateur.')
+
+    return render(request, 'administration/reset_password.html')

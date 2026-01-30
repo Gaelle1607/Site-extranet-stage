@@ -10,22 +10,19 @@
         <div class="col">
             <div class="card h-100 produit-card">
 
-                <!-- Lien vers le détail produit -->
-                <a href="{% url 'catalogue:detail' produit.reference %}" class="text-decoration-none">
-                    <div class="card-body p-2">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1" style="min-width: 0;">
-                                <!-- Nom du produit -->
-                                <h6 class="mb-0 text-dark text-truncate">{{ produit.nom }}</h6>
+                <div class="card-body p-2">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <!-- Nom du produit -->
+                            <h6 class="mb-0 text-dark text-truncate">{{ produit.nom }}</h6>
 
-                                <!-- Prix et unité -->
-                                <small class="text-primary fw-bold">
-                                    {{ produit.prix|floatformat:2 }} € / {{ produit.unite }}
-                                </small>
-                            </div>
+                            <!-- Prix et unité -->
+                            <small class="text-primary fw-bold">
+                                {{ produit.prix|floatformat:2 }} € / {{ produit.unite }}
+                            </small>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <!-- Footer avec ajout au panier -->
                 <div class="card-footer bg-white p-2">

@@ -50,6 +50,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'commandes.context_processors.panier_count',
+                'clients.context_processors.demandes_mdp_count',
             ],
         },
     },
@@ -102,3 +103,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'clients:connexion'
 LOGIN_REDIRECT_URL = 'catalogue:liste'
 LOGOUT_REDIRECT_URL = 'clients:connexion'
+
+# Session : expire à la fermeture du navigateur
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

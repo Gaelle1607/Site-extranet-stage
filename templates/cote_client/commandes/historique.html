@@ -26,7 +26,6 @@
                                 <th>Date</th>
                                 <th>Articles</th>
                                 <th>Total HT</th>
-                                <th>Statut</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -37,21 +36,6 @@
                                 <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
                                 <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
                                 <td>{{ commande.total_ht|floatformat:2 }} €</td>
-                                <td>
-                                    {% if commande.statut %}
-                                        {% comment %} Badge dynamique selon le statut {% endcomment %}
-                                        <span class="badge
-                                            {% if commande.statut == 'en_attente' %}bg-warning text-dark
-                                            {% elif commande.statut == 'confirmee' %}bg-info
-                                            {% elif commande.statut == 'en_preparation' %}bg-primary
-                                            {% elif commande.statut == 'expediee' %}bg-info
-                                            {% elif commande.statut == 'livree' %}bg-success
-                                            {% elif commande.statut == 'annulee' %}bg-danger
-                                            {% endif %}">
-                                            {{ commande.get_statut_display }}
-                                        </span>
-                                    {% endif %}
-                                </td>
                                 <td>
                                     <a href="{% url 'commandes:details' commande.id %}"
                                        class="btn btn-outline-primary btn-sm">

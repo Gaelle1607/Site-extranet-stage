@@ -27,6 +27,5 @@ admin.site.register(User, UserAdmin)
 
 @admin.register(Utilisateur)
 class UtilisateurAdmin(admin.ModelAdmin):
-    list_display = ('code_tiers', 'user', 'actif')
-    list_filter = ('actif',)
+    list_display = ('code_tiers', 'user')
     search_fields = ('code_tiers', 'user__username')

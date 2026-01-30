@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
+import traceback
 from catalogue.services import get_produit_by_reference, get_client_distant
-from .services import envoyer_commande
+from .services import envoyer_commande, generer_csv_edi
 from .models import Commande, LigneCommande
 
 
@@ -267,6 +268,7 @@ def valider_commande(request):
     if request.method == 'POST':
         notes = request.POST.get('commentaires', '') or request.POST.get('notes', '')
         date_livraison = request.POST.get('date_livraison') or None
+        date_depart_camions = request.POST.get('date_depart_camions') or None
 
         # Préparer les données de commande
         nom_client = client_distant.nom if client_distant else utilisateur.code_tiers
@@ -304,9 +306,9 @@ def valider_commande(request):
                 utilisateur=utilisateur,
                 numero=Commande.generer_numero(),
                 date_livraison=date_livraison,
+                date_depart_camions=date_depart_camions,
                 total_ht=Decimal(str(total)),
-                commentaire=notes,
-                statut='en_attente'
+                commentaire=notes
             )
 
             # Créer les lignes de commande
@@ -319,6 +321,16 @@ def valider_commande(request):
                     prix_unitaire=Decimal(str(ligne['prix'])),
                     total_ligne=Decimal(str(ligne['total']))
                 )
+
+            # Générer le fichier CSV EDI
+            try:
+                csv_path = generer_csv_edi(commande, client_distant, lignes)
+                print(f"Fichier EDI généré: {csv_path}")
+                messages.info(request, f"Fichier EDI généré: {csv_path}")
+            except Exception as e:
+                error_msg = f"Erreur génération EDI: {e}\n{traceback.format_exc()}"
+                print(error_msg)
+                messages.warning(request, f"Erreur génération EDI: {e}")
 
             # Vider le panier
             request.session['panier'] = {}

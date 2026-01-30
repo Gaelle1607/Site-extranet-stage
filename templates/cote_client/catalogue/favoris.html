@@ -14,41 +14,38 @@
         </div>
 
         {% if produits_favoris %}
-        <div class="row row-cols-1 row-cols-md-2 g-3" data-liste-limitee>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" data-liste-limitee>
             {% for produit in produits_favoris %}
             <div class="col">
                 <div class="card h-100 produit-card">
 
-                    <!-- Lien vers le détail produit -->
-                    <a href="{% url 'catalogue:detail' produit.reference %}" class="text-decoration-none">
-                        <div class="card-body p-2">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-grow-1" style="min-width: 0;">
-                                    <h6 class="mb-0 text-dark text-truncate">{{ produit.nom }}</h6>
-                                    <small class="text-primary fw-bold">
-                                        {{ produit.prix|floatformat:2 }} € / {{ produit.unite }}
-                                    </small>
-                                </div>
+                    <!-- Informations produit -->
+                    <div class="card-body">
+                        <p class="text-muted small mb-1">{{ produit.reference }}</p>
+                        <h5 class="card-title">{{ produit.nom }}</h5>
+                    </div>
+
+                    <!-- Footer : prix, actions -->
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="h5 mb-0 text-primary">{{ produit.prix|floatformat:2 }} €</span>
+                                <small class="text-muted">HT{% if produit.unite %} / {{ produit.unite }}{% endif %}</small>
                             </div>
                         </div>
-                    </a>
 
-                    <!-- Footer avec ajout au panier -->
-                    <div class="card-footer bg-white p-2">
-                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form">
+                        <!-- Formulaire ajout panier -->
+                        <form method="post" action="{% url 'commandes:ajouter' %}" class="ajouter-panier-form my-3">
                             {% csrf_token %}
                             <input type="hidden" name="reference" value="{{ produit.reference }}">
-                            <div class="input-group input-group-sm">
-                                <input type="number"
-                                       name="quantite"
-                                       value="1"
-                                       min="1"
-                                       class="form-control text-center">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="bi bi-cart-plus"></i>
+                            <div class="input-group">
+                                <input type="number" name="quantite" value="1" min="1" class="form-control text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-cart-plus"></i> Ajouter
                                 </button>
                             </div>
                         </form>
+
                     </div>
 
                 </div>

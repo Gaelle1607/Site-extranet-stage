@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Formulaire de recherche -->
 <form method="get" class="d-flex gap-2 mb-3">
-    <input type="text" name="q" class="form-control" placeholder="Rechercher par numéro, client ou statut..." value="{{ query }}">
+    <input type="text" name="q" class="form-control" placeholder="Rechercher par numéro ou client..." value="{{ query }}">
     <button type="submit" class="btn btn-primary">Rechercher</button>
 
     <!-- Bouton Effacer affiché uniquement si une recherche est active -->
@@ -30,7 +30,6 @@
                             <th>Date</th>
                             <th>Articles</th>
                             <th>Total HT</th>
-                            <th>Statut</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -42,23 +41,6 @@
                             <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
                             <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
                             <td>{{ commande.total_ht|floatformat:2 }} €</td>
-
-                            <!-- Statut de la commande avec badge coloré -->
-                            <td>
-                                {% if commande.statut == 'en_attente' %}
-                                    <span class="badge bg-warning text-dark">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'confirmee' %}
-                                    <span class="badge bg-info">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'en_preparation' %}
-                                    <span class="badge bg-primary">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'expediee' or commande.statut == 'livree' %}
-                                    <span class="badge bg-success">{{ commande.get_statut_display }}</span>
-                                {% elif commande.statut == 'annulee' %}
-                                    <span class="badge bg-danger">{{ commande.get_statut_display }}</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ commande.get_statut_display|default:"Non défini" }}</span>
-                                {% endif %}
-                            </td>
 
                             <!-- Boutons d'actions -->
                             <td class="text-end">

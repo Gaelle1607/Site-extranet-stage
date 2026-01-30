@@ -10,4 +10,5 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('profil/', views.profil, name='profil'),
     path('profil/mot-de-passe/', views.modifier_mot_de_passe, name='modifier_mot_de_passe'),
+    path('demande-mot-de-passe/', views.demande_mot_de_passe, name='demande_mdp'),
 ]

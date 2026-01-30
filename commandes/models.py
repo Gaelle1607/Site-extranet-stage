@@ -4,15 +4,6 @@ from clients.models import Utilisateur
 
 class Commande(models.Model):
     """Commande passée par un utilisateur"""
-    STATUT_CHOICES = [
-        ('en_attente', 'En attente'),
-        ('confirmee', 'Confirmée'),
-        ('en_preparation', 'En préparation'),
-        ('expediee', 'Expédiée'),
-        ('livree', 'Livrée'),
-        ('annulee', 'Annulée'),
-    ]
-
     utilisateur = models.ForeignKey(
         Utilisateur,
         on_delete=models.CASCADE,
@@ -22,7 +13,7 @@ class Commande(models.Model):
     numero = models.CharField('Numéro de commande', max_length=50, unique=True)
     date_commande = models.DateTimeField('Date de commande', auto_now_add=True)
     date_livraison = models.DateField('Date de livraison prévue', blank=True, null=True)
-    statut = models.CharField('Statut', max_length=20, choices=STATUT_CHOICES, default='en_attente')
+    date_depart_camions = models.DateField('Date de départ des camions', blank=True, null=True)
     total_ht = models.DecimalField('Total HT', max_digits=10, decimal_places=2, default=0)
     commentaire = models.TextField('Commentaire', blank=True, default='')
 

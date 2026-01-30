@@ -73,6 +73,14 @@
                 </div>
 
                 <div class="col-lg-6">
+                    <div class="row align-items-center mb-3">
+                        <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-truck me-2"></i>Départ camions :
+                        </label>
+                        <div class="col-7">
+                            <input type="date" id="date-depart-camions" name="date_depart_camions" class="form-control" readonly>
+                        </div>
+                    </div>
                     <div class="row align-items-center">
                         <label class="col-5 col-form-label fw-bold">
                             <i class="bi bi-calendar-event me-2"></i>Date de livraison :
@@ -177,5 +185,5 @@
 
 {% block extra_js %}
 {% load static %}
-<script src="{% static 'js/commander.js' %}?v=6"></script>
+<script src="{% static 'js/commander.js' %}?v=7"></script>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends 'cote_client/base.html' %}
+{% load static %}
 
 {% block title %}Mon panier{% endblock %}
 
@@ -87,12 +88,21 @@
                 <form method="post" action="{% url 'commandes:valider' %}">{% csrf_token %}
                     <div class="row align-items-center mb-3">
                         <label class="col-5 col-form-label fw-bold">
+                            <i class="bi bi-truck me-2"></i>Départ camions :
+                        </label>
+                        <div class="col-7">
+                            <input type="date" id="date-depart-camions" name="date_depart_camions" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="row align-items-center mb-3">
+                        <label class="col-5 col-form-label fw-bold">
                             <i class="bi bi-calendar-event me-2"></i>Date de livraison :
                         </label>
                         <div class="col-7">
                             <input type="date" id="date-livraison" name="date_livraison" class="form-control" required>
                         </div>
                     </div>
+                   
                     <div class="mb-3">
                         <label class="form-label fw-bold"><i class="bi bi-chat-text me-2"></i> Commentaires / Instructions</label>
                         <textarea name="commentaires" class="form-control" rows="3" placeholder="Instructions pour votre commande..."></textarea>
@@ -114,4 +124,8 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/date-calcul.js' %}"></script>
 {% endblock %}

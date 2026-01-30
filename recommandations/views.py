@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from .services import obtenir_recommandations, obtenir_produits_favoris
-from catalogue.services import get_categories_client, get_produit_by_reference
+from catalogue.services import get_categories_client, get_produit_by_reference, FILTRES_DISPONIBLES
 
 
 @login_required
@@ -17,12 +17,38 @@ def mes_recommandations(request):
     recommandations = obtenir_recommandations(utilisateur, limite=12)
     categories = get_categories_client(utilisateur)
 
+    # Collecter tous les tags présents dans les recommandations
+    tags_disponibles = set()
+    for p in recommandations:
+        tags_disponibles.update(p.get('tags', []))
+
+    # Filtres groupés pour le template, filtrés par tags disponibles
+    filtres_groupes = {}
+    for groupe, filtres in FILTRES_DISPONIBLES.items():
+        filtres_groupe = {
+            code: info["label"]
+            for code, info in filtres.items()
+            if code in tags_disponibles
+        }
+        if filtres_groupe:
+            filtres_groupes[groupe] = filtres_groupe
+
+    # Filtres actifs (checkbox)
+    filtres_actifs = request.GET.getlist("filtre")
+
     # Recherche
     recherche = request.GET.get('q', '').strip().lower()
     if recherche:
         recommandations = [p for p in recommandations if
                     recherche in p.get('nom', '').lower() or
                     recherche in p.get('reference', '').lower()]
+
+    # Application des filtres
+    if filtres_actifs:
+        recommandations = [
+            p for p in recommandations
+            if any(f in p.get('tags', []) for f in filtres_actifs)
+        ]
 
     # Récupérer le panier pour le récap
     panier = request.session.get('panier', {})
@@ -44,6 +70,8 @@ def mes_recommandations(request):
     context = {
         'recommandations': recommandations,
         'categories': categories,
+        'filtres_groupes': filtres_groupes,
+        'filtres_actifs': filtres_actifs,
         'recherche': request.GET.get('q', ''),
         'lignes_panier': lignes_panier,
         'total_panier': total_panier,

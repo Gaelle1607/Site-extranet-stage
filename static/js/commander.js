@@ -2,10 +2,33 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Calcul automatique de la date de départ des camions (2 jours avant livraison)
+    // Placé en premier pour s'assurer qu'il s'exécute même si le reste échoue
+    const dateLivraison = document.getElementById('date-livraison');
+    const dateDepartCamions = document.getElementById('date-depart-camions');
+
+    function calculerDateDepart() {
+        if (dateLivraison && dateLivraison.value) {
+            const date = new Date(dateLivraison.value);
+            date.setDate(date.getDate() - 2);
+            dateDepartCamions.value = date.toISOString().split('T')[0];
+        } else if (dateDepartCamions) {
+            dateDepartCamions.value = '';
+        }
+    }
+
+    if (dateLivraison && dateDepartCamions) {
+        dateLivraison.addEventListener('change', calculerDateDepart);
+        // Calculer au chargement si une date existe déjà
+        calculerDateDepart();
+    }
+
     // Recherche produits en temps réel
     const rechercheInput = document.getElementById('recherche-produit');
     const effacerBtn = document.getElementById('effacer-recherche');
     const lignesProduits = document.querySelectorAll('.produit-ligne');
+
+    if (!rechercheInput) return; // Sortir si pas d'éléments de recherche
 
     // Empêcher Entrée de soumettre le formulaire
     rechercheInput.addEventListener('keydown', (e) => {

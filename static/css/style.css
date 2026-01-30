@@ -459,14 +459,6 @@ footer a {
     color: var(--giffaud-accent);
 }
 
-/* Statuts commande */
-.statut-en_attente { color: var(--warning-color); }
-.statut-confirmee { color: var(--info-color); }
-.statut-en_preparation { color: var(--giffaud-accent); }
-.statut-expediee { color: var(--info-color); }
-.statut-livree { color: var(--success-color); }
-.statut-annulee { color: var(--danger-color); }
-
 /* Animation ajout panier */
 @keyframes cartBounce {
     0%, 100% { transform: scale(1); }
