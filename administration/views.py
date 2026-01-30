@@ -113,9 +113,18 @@ def liste_commande(request):
 
     commandes = commandes[:50]
 
+    # Enrichir avec le nom du client distant
+    commandes_avec_client = []
+    for commande in commandes:
+        client = commande.utilisateur.get_client_distant()
+        commandes_avec_client.append({
+            'commande': commande,
+            'nom_client': client.nom if client else f"Client {commande.utilisateur.code_tiers}",
+        })
+
     context = {
         'page_title': 'Liste des commandes',
-        'commandes': commandes,
+        'commandes': commandes_avec_client,
         'query': query,
     }
     return render(request, 'administration/liste_commandes.html', context)
@@ -136,15 +145,26 @@ def details_commande(request, commande_id):
 def commande_utilisateur(request, utilisateur_id):
     """Liste des commandes d'un client"""
     utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
-    client_distant = ComCli.objects.using('logigvd').filter(tiers=utilisateur.code_tiers).first()
-    nom_client = client_distant.nom if client_distant else f"Client {utilisateur.code_tiers}"
+
+    # Prendre le client avec complement vide en priorité (même logique que cadencier_client)
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute("""
+            SELECT nom FROM comcli
+            WHERE tiers = %s AND (complement IS NULL OR TRIM(complement) = '')
+            ORDER BY nom
+            LIMIT 1
+        """, [utilisateur.code_tiers])
+        row = cursor.fetchone()
+        if not row:
+            cursor.execute("SELECT nom FROM comcli WHERE tiers = %s ORDER BY complement, nom LIMIT 1", [utilisateur.code_tiers])
+            row = cursor.fetchone()
+    nom_client = row[0] if row and row[0] else f"Client {utilisateur.code_tiers}"
 
     commandes = Commande.objects.filter(utilisateur=utilisateur).order_by('-date_commande')[:50]
 
     context = {
         'page_title': f'Commandes - {nom_client}',
         'utilisateur': utilisateur,
-        'client': client_distant,
         'nom_client': nom_client,
         'commandes': commandes,
     }
@@ -164,19 +184,36 @@ def catalogue_utilisateurs(request):
         except (ValueError, TypeError):
             pass
 
-    # Récupérer les noms des clients avec MAX(nom) comme dans catalogue_clients
+    # Récupérer les noms des clients - même logique que cadencier_client
+    # Priorité aux entrées avec complement vide/null
     clients_distants = {}
     if codes_tiers:
         placeholders = ','.join(['%s'] * len(codes_tiers))
         with connections['logigvd'].cursor() as cursor:
+            # D'abord récupérer les noms des entrées avec complement vide
             cursor.execute(f"""
-                SELECT tiers, MAX(nom) as nom
-                FROM comcli
+                SELECT tiers, nom FROM comcli
                 WHERE tiers IN ({placeholders})
-                GROUP BY tiers
+                AND (complement IS NULL OR TRIM(complement) = '')
+                ORDER BY tiers, nom
             """, codes_tiers)
             for row in cursor.fetchall():
-                clients_distants[row[0]] = row[1]
+                # Ne garder que la première entrée pour chaque tiers
+                if row[0] not in clients_distants:
+                    clients_distants[row[0]] = row[1]
+
+            # Ensuite récupérer les noms pour les tiers qui n'ont pas été trouvés
+            tiers_manquants = [t for t in codes_tiers if t not in clients_distants]
+            if tiers_manquants:
+                placeholders2 = ','.join(['%s'] * len(tiers_manquants))
+                cursor.execute(f"""
+                    SELECT tiers, nom FROM comcli
+                    WHERE tiers IN ({placeholders2})
+                    ORDER BY tiers, complement
+                """, tiers_manquants)
+                for row in cursor.fetchall():
+                    if row[0] not in clients_distants:
+                        clients_distants[row[0]] = row[1]
 
     # Enrichir avec les infos de la base distante
     clients_avec_infos = []
@@ -220,60 +257,78 @@ def catalogue_clients(request):
     """Liste des clients de la base distante"""
     query = request.GET.get('q', '').strip()
 
-    # SQL brut : groupé par (tiers, complement)
-    # Même tiers sans complement = 1 carte, même tiers avec complements différents = plusieurs cartes
-    if query:
-        if query.isdigit():
-            # Recherche numérique : tiers exact (index) + FULLTEXT nom/acheminement
-            sql = """
-                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
-                FROM comcli
-                WHERE tiers = %s
-                GROUP BY tiers, complement
-
-                UNION
-
-                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
-                FROM comcli
-                WHERE tiers != 0
-                  AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
-                GROUP BY tiers, complement
-
-                ORDER BY tiers
-                LIMIT 100
-            """
-            params = [int(query), f'{query}*']
-        else:
-            # Recherche texte : FULLTEXT sur nom/acheminement
-            sql = """
-                SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
-                FROM comcli
-                WHERE tiers != 0
-                  AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
-                GROUP BY tiers, complement
-                ORDER BY tiers
-                LIMIT 100
-            """
-            params = [f'{query}*']
-    else:
-        sql = """
-            SELECT tiers, MAX(nom) as nom, IFNULL(complement, '') as complement, MAX(acheminement) as acheminement
-            FROM comcli
-            WHERE tiers != 0
-            GROUP BY tiers, complement
-            ORDER BY tiers
-            LIMIT 100
-        """
-        params = []
-
     with connections['logigvd'].cursor() as cursor:
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
+        # Étape 1: Récupérer les tiers correspondant à la recherche
+        if query:
+            if query.isdigit():
+                # Recherche numérique : tiers exact + FULLTEXT
+                cursor.execute("""
+                    SELECT DISTINCT tiers FROM comcli WHERE tiers = %s
+                    UNION
+                    SELECT DISTINCT tiers FROM comcli
+                    WHERE tiers != 0 AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+                    LIMIT 100
+                """, [int(query), f'{query}*'])
+            else:
+                # Recherche texte : FULLTEXT sur nom/acheminement
+                cursor.execute("""
+                    SELECT DISTINCT tiers FROM comcli
+                    WHERE tiers != 0 AND MATCH(nom, acheminement) AGAINST (%s IN BOOLEAN MODE)
+                    LIMIT 100
+                """, [f'{query}*'])
+        else:
+            cursor.execute("SELECT DISTINCT tiers FROM comcli WHERE tiers != 0 ORDER BY tiers LIMIT 100")
 
-    clients = [
-        {'tiers': row[0], 'nom': row[1], 'complement': row[2] or '', 'acheminement': row[3] or ''}
-        for row in rows
-    ]
+        tiers_list = [row[0] for row in cursor.fetchall()]
+
+        if not tiers_list:
+            clients = []
+        else:
+            # Étape 2: Pour chaque tiers, récupérer le nom avec complement vide en priorité
+            # (même logique que cadencier_client)
+            placeholders = ','.join(['%s'] * len(tiers_list))
+
+            # D'abord les entrées avec complement vide (ORDER BY tiers, nom pour cohérence)
+            cursor.execute(f"""
+                SELECT tiers, nom, IFNULL(complement, '') as complement, acheminement
+                FROM comcli
+                WHERE tiers IN ({placeholders})
+                AND (complement IS NULL OR TRIM(complement) = '')
+                ORDER BY tiers, nom
+            """, tiers_list)
+
+            clients_dict = {}
+            for row in cursor.fetchall():
+                # Ne garder que la première entrée pour chaque tiers
+                if row[0] not in clients_dict:
+                    clients_dict[row[0]] = {
+                        'tiers': row[0],
+                        'nom': row[1],
+                        'complement': row[2] or '',
+                        'acheminement': row[3] or ''
+                    }
+
+            # Ensuite les tiers qui n'ont pas été trouvés (ceux sans complement vide)
+            tiers_manquants = [t for t in tiers_list if t not in clients_dict]
+            if tiers_manquants:
+                placeholders2 = ','.join(['%s'] * len(tiers_manquants))
+                cursor.execute(f"""
+                    SELECT tiers, nom, IFNULL(complement, '') as complement, acheminement
+                    FROM comcli
+                    WHERE tiers IN ({placeholders2})
+                    ORDER BY tiers, complement
+                """, tiers_manquants)
+                for row in cursor.fetchall():
+                    if row[0] not in clients_dict:
+                        clients_dict[row[0]] = {
+                            'tiers': row[0],
+                            'nom': row[1],
+                            'complement': row[2] or '',
+                            'acheminement': row[3] or ''
+                        }
+
+            # Construire la liste triée par tiers
+            clients = [clients_dict[t] for t in sorted(clients_dict.keys())]
 
     context = {
         'page_title': 'Catalogue Clients',
@@ -285,8 +340,19 @@ def catalogue_clients(request):
 @admin_required
 def cadencier_client(request, code_tiers):
     with connections['logigvd'].cursor() as cursor:
-        cursor.execute("SELECT MAX(nom) FROM comcli WHERE tiers = %s", [code_tiers])
+        # Prendre le nom de l'entrée principale (complement vide) en priorité
+        # ORDER BY nom pour cohérence avec les autres vues
+        cursor.execute("""
+            SELECT nom FROM comcli
+            WHERE tiers = %s AND (complement IS NULL OR TRIM(complement) = '')
+            ORDER BY nom
+            LIMIT 1
+        """, [code_tiers])
         row = cursor.fetchone()
+        if not row:
+            # Sinon prendre le premier nom trouvé
+            cursor.execute("SELECT nom FROM comcli WHERE tiers = %s ORDER BY complement, nom LIMIT 1", [code_tiers])
+            row = cursor.fetchone()
     nom_client = row[0] if row and row[0] else str(code_tiers)
 
     # Créer un objet avec code_tiers pour le service
@@ -317,7 +383,36 @@ def cadencier_client(request, code_tiers):
 @admin_required
 def information_utilisateur(request, utilisateur_id):
     utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
-    client_distant = ComCli.objects.using('logigvd').filter(tiers=utilisateur.code_tiers).first()
+
+    # Prendre le client avec complement vide en priorité (même logique que cadencier_client)
+    with connections['logigvd'].cursor() as cursor:
+        cursor.execute("""
+            SELECT nom, complement, adresse, cp, acheminement FROM comcli
+            WHERE tiers = %s AND (complement IS NULL OR TRIM(complement) = '')
+            ORDER BY nom
+            LIMIT 1
+        """, [utilisateur.code_tiers])
+        row = cursor.fetchone()
+        if not row:
+            # Sinon prendre la première entrée triée par complement
+            cursor.execute("""
+                SELECT nom, complement, adresse, cp, acheminement FROM comcli
+                WHERE tiers = %s ORDER BY complement, nom LIMIT 1
+            """, [utilisateur.code_tiers])
+            row = cursor.fetchone()
+
+    # Créer un objet similaire à ComCli pour le template
+    if row:
+        from types import SimpleNamespace
+        client_distant = SimpleNamespace(
+            nom=row[0],
+            complement=row[1],
+            adresse=row[2],
+            cp=row[3],
+            acheminement=row[4]
+        )
+    else:
+        client_distant = None
 
     context = {
         'page_title': f'Information - {utilisateur.user.username}',
@@ -339,6 +434,8 @@ def changer_mot_de_passe(request, utilisateur_id):
         messages.error(request, 'Les mots de passe ne correspondent pas.')
     elif len(nouveau_mdp) < 4:
         messages.error(request, 'Le mot de passe doit contenir au moins 4 caractères.')
+    elif utilisateur.user.check_password(nouveau_mdp):
+        messages.error(request, 'Le nouveau mot de passe doit être différent de l\'ancien.')
     else:
         utilisateur.user.set_password(nouveau_mdp)
         utilisateur.user.save()
@@ -421,6 +518,17 @@ def inscription(request):
 
 
 @admin_required
+@require_POST
+def verifier_mot_de_passe_api(request, utilisateur_id):
+    """API pour vérifier si le nouveau mot de passe est identique à l'ancien"""
+    utilisateur = get_object_or_404(Utilisateur, id=utilisateur_id)
+    nouveau_mdp = request.POST.get('nouveau_mdp', '')
+
+    est_identique = utilisateur.user.check_password(nouveau_mdp)
+    return JsonResponse({'identique': est_identique})
+
+
+@admin_required
 def recherche_clients_api(request):
     """API pour rechercher les clients (utilisée par le champ de recherche AJAX)"""
     query = request.GET.get('q', '').strip()
@@ -493,6 +601,8 @@ def changer_mot_de_passe_admin(request):
         messages.error(request, 'Les mots de passe ne correspondent pas.')
     elif len(nouveau_mdp) < 4:
         messages.error(request, 'Le mot de passe doit contenir au moins 4 caractères.')
+    elif nouveau_mdp == ancien_mdp:
+        messages.error(request, 'Le nouveau mot de passe doit être différent de l\'ancien.')
     else:
         request.user.set_password(nouveau_mdp)
         request.user.save()

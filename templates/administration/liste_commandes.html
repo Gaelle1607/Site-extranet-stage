@@ -34,20 +34,20 @@
                         </tr>
                     </thead>
                     <tbody data-liste-limitee>
-                        {% for commande in commandes %}
+                        {% for item in commandes %}
                         <tr>
-                            <td><strong>{{ commande.numero }}</strong></td>
-                            <td>{{ commande.utilisateur.code_tiers }}</td>
-                            <td>{{ commande.date_commande|date:"d/m/Y H:i" }}</td>
-                            <td>{{ commande.lignes.count }} article{{ commande.lignes.count|pluralize }}</td>
-                            <td>{{ commande.total_ht|floatformat:2 }} €</td>
+                            <td><strong>{{ item.commande.numero }}</strong></td>
+                            <td>{{ item.nom_client }}</td>
+                            <td>{{ item.commande.date_commande|date:"d/m/Y H:i" }}</td>
+                            <td>{{ item.commande.lignes.count }} article{{ item.commande.lignes.count|pluralize }}</td>
+                            <td>{{ item.commande.total_ht|floatformat:2 }} €</td>
 
                             <!-- Boutons d'actions -->
                             <td class="text-end">
-                                <a href="{% url 'administration:details_commande' commande.id %}" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'administration:details_commande' item.commande.id %}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye"></i> Voir
                                 </a>
-                                <form method="post" action="{% url 'administration:supprimer_commande' commande.id %}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer la commande {{ commande.numero }} ?');">
+                                <form method="post" action="{% url 'administration:supprimer_commande' item.commande.id %}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer la commande {{ item.commande.numero }} ?');">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>

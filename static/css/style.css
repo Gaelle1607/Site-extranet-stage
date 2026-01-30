@@ -165,9 +165,15 @@ h1, h2, h3, h4, h5, h6,
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card:hover{
+.card:hover {
     transform: translateY(-8px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Désactiver l'animation hover sur les cards avec sticky-top */
+.card.sticky-top:hover {
+    transform: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .card-header {
@@ -522,6 +528,46 @@ footer a {
     .ajouter-panier-form .input-group .btn {
         border-radius: 0 !important;
         width: 100%;
+    }
+}
+
+/* Écrans moyens (tablettes, petits laptops) - réduire l'espacement côté client */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    /* Réduire le padding du container sur écrans moyens */
+    main .container {
+        padding-left: 0;
+        padding-right: 0.5rem;
+        max-width: 95%;
+    }
+
+    /* Réduire les marges de la row du catalogue */
+    main .container > .row {
+        margin-left: 0;
+        margin-right: -0.25rem;
+    }
+
+    main .container > .row > [class*="col-"] {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    /* Ajuster les colonnes avec espacement */
+    main .container > .row > .col-md-2 {
+        flex: 0 0 18%;
+        max-width: 18%;
+        margin-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
+    main .container > .row > .col-md-7 {
+        flex: 0 0 57%;
+        max-width: 57%;
+    }
+
+    main .container > .row > .col-md-3 {
+        flex: 0 0 22%;
+        max-width: 22%;
+        margin-left: 0.5rem;
     }
 }
 

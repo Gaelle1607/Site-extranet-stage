@@ -96,7 +96,7 @@ def generer_filtres_automatiques(produits, seuil_occurrences=3):
 # Filtres organisés par groupe
 # Chaque filtre : code -> {"label": affiché, "termes": [cherchés dans le libellé sans accents]}
 FILTRES_DISPONIBLES = {
-    "Conditionnement": {
+    "Format": {
         "colis":        {"label": "Colis",          "termes": []},  # basé sur l'unité de vente
         "kg":           {"label": "Vente au kg",    "termes": []},  # basé sur l'unité de vente
         "barquette":    {"label": "Barquette",      "termes": ["barquette", "barquettes"]},

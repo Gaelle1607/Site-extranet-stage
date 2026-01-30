@@ -4,7 +4,18 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
+from datetime import datetime
 import traceback
+
+
+def parse_date(date_str):
+    """Convertit une string date en objet date pour le formatage dans les templates"""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return date_str
 from catalogue.services import get_produit_by_reference, get_client_distant
 from .services import envoyer_commande, generer_csv_edi
 from .models import Commande, LigneCommande
@@ -239,7 +250,7 @@ def vider_panier(request):
 
 @login_required
 def valider_commande(request):
-    """Page de validation et envoi de la commande"""
+    """Page de récapitulatif et validation de la commande"""
     utilisateur = request.user.utilisateur
     client_distant = get_client_distant(utilisateur.code_tiers)
     panier = get_panier(request)
@@ -247,6 +258,38 @@ def valider_commande(request):
     if not panier:
         messages.warning(request, 'Votre panier est vide.')
         return redirect('catalogue:liste')
+
+    # Si GET, rediriger vers le panier ou afficher le récap si données en session
+    if request.method == 'GET':
+        recap = request.session.get('commande_recap')
+        if recap:
+            # Afficher le récap avec les données en session
+            lignes = []
+            total = 0
+            for reference, quantite in panier.items():
+                produit = get_produit_by_reference(utilisateur, reference)
+                if produit:
+                    ligne_total = produit['prix'] * quantite
+                    lignes.append({
+                        'reference': reference,
+                        'nom': produit['nom'],
+                        'prix': produit['prix'],
+                        'unite': produit.get('unite', ''),
+                        'quantite': quantite,
+                        'total': ligne_total,
+                    })
+                    total += ligne_total
+            context = {
+                'lignes': lignes,
+                'total': total,
+                'nombre_articles': sum(panier.values()),
+                'client': client_distant,
+                'date_livraison': parse_date(recap.get('date_livraison')),
+                'date_depart_camions': parse_date(recap.get('date_depart_camions')),
+                'commentaires': recap.get('commentaires', ''),
+            }
+            return render(request, 'cote_client/commandes/validation.html', context)
+        return redirect('commandes:panier')
 
     # Construire les lignes
     lignes = []
@@ -265,89 +308,115 @@ def valider_commande(request):
             })
             total += ligne_total
 
-    if request.method == 'POST':
-        notes = request.POST.get('commentaires', '') or request.POST.get('notes', '')
+    # Vérifier si c'est une demande de récap ou une confirmation
+    if 'confirmer' in request.POST:
+        # C'est une confirmation finale - récupérer les données de session
+        recap = request.session.get('commande_recap', {})
+        if not recap:
+            messages.warning(request, 'Session expirée, veuillez recommencer.')
+            return redirect('commandes:panier')
+
+        notes = recap.get('commentaires', '')
+        date_livraison = recap.get('date_livraison')
+        date_depart_camions = recap.get('date_depart_camions')
+    else:
+        # C'est une demande de récap - stocker les infos en session
         date_livraison = request.POST.get('date_livraison') or None
         date_depart_camions = request.POST.get('date_depart_camions') or None
+        notes = request.POST.get('commentaires', '')
 
-        # Préparer les données de commande
-        nom_client = client_distant.nom if client_distant else utilisateur.code_tiers
-        commande_data = {
-            'client': nom_client,
+        request.session['commande_recap'] = {
+            'date_livraison': date_livraison,
+            'date_depart_camions': date_depart_camions,
+            'commentaires': notes,
+        }
+        request.session.modified = True
+
+        # Afficher la page de récap
+        context = {
             'lignes': lignes,
             'total': total,
-            'notes': notes,
-            'date_livraison': date_livraison,
+            'nombre_articles': sum(panier.values()),
+            'client': client_distant,
+            'date_livraison': parse_date(date_livraison),
+            'date_depart_camions': parse_date(date_depart_camions),
+            'commentaires': notes,
         }
+        return render(request, 'cote_client/commandes/validation.html', context)
 
-        # DEBUG: Afficher la commande dans le terminal
-        print("\n" + "="*60)
-        print("NOUVELLE COMMANDE REÇUE")
-        print("="*60)
-        print(f"Client: {nom_client}")
-        print(f"Date: {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-        print("-"*60)
-        print("Articles:")
-        for ligne in lignes:
-            print(f"  - {ligne['nom']} ({ligne['reference']})")
-            print(f"    Qté: {ligne['quantite']} x {ligne['prix']:.2f} € = {ligne['total']:.2f} €")
-        print("-"*60)
-        print(f"TOTAL HT: {total:.2f} €")
-        if notes:
-            print(f"Notes: {notes}")
-        print("="*60 + "\n")
-
-        # Envoyer au logiciel externe
-        try:
-            resultat = envoyer_commande(commande_data)
-
-            # Sauvegarder la commande en base de données
-            commande = Commande.objects.create(
-                utilisateur=utilisateur,
-                numero=Commande.generer_numero(),
-                date_livraison=date_livraison,
-                date_depart_camions=date_depart_camions,
-                total_ht=Decimal(str(total)),
-                commentaire=notes
-            )
-
-            # Créer les lignes de commande
-            for ligne in lignes:
-                LigneCommande.objects.create(
-                    commande=commande,
-                    reference_produit=ligne['reference'],
-                    nom_produit=ligne['nom'],
-                    quantite=ligne['quantite'],
-                    prix_unitaire=Decimal(str(ligne['prix'])),
-                    total_ligne=Decimal(str(ligne['total']))
-                )
-
-            # Générer le fichier CSV EDI
-            try:
-                csv_path = generer_csv_edi(commande, client_distant, lignes)
-                print(f"Fichier EDI généré: {csv_path}")
-                messages.info(request, f"Fichier EDI généré: {csv_path}")
-            except Exception as e:
-                error_msg = f"Erreur génération EDI: {e}\n{traceback.format_exc()}"
-                print(error_msg)
-                messages.warning(request, f"Erreur génération EDI: {e}")
-
-            # Vider le panier
-            request.session['panier'] = {}
-            request.session.modified = True
-
-            messages.success(request, 'Votre commande a été envoyée avec succès !')
-            return redirect('commandes:confirmation')
-
-        except Exception as e:
-            messages.error(request, f'Erreur lors de l\'envoi de la commande : {str(e)}')
-
-    context = {
+    # Préparer les données de commande
+    nom_client = client_distant.nom if client_distant else utilisateur.code_tiers
+    commande_data = {
+        'client': nom_client,
         'lignes': lignes,
         'total': total,
-        'client': client_distant,
+        'notes': notes,
+        'date_livraison': date_livraison,
     }
-    return render(request, 'cote_client/commandes/validation.html', context)
+
+    # DEBUG: Afficher la commande dans le terminal
+    print("\n" + "="*60)
+    print("NOUVELLE COMMANDE REÇUE")
+    print("="*60)
+    print(f"Client: {nom_client}")
+    print(f"Date: {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    print("-"*60)
+    print("Articles:")
+    for ligne in lignes:
+        print(f"  - {ligne['nom']} ({ligne['reference']})")
+        print(f"    Qté: {ligne['quantite']} x {ligne['prix']:.2f} € = {ligne['total']:.2f} €")
+    print("-"*60)
+    print(f"TOTAL HT: {total:.2f} €")
+    if notes:
+        print(f"Notes: {notes}")
+    print("="*60 + "\n")
+
+    # Envoyer au logiciel externe
+    try:
+        resultat = envoyer_commande(commande_data)
+
+        # Sauvegarder la commande en base de données
+        commande = Commande.objects.create(
+            utilisateur=utilisateur,
+            numero=Commande.generer_numero(),
+            date_livraison=date_livraison,
+            date_depart_camions=date_depart_camions,
+            total_ht=Decimal(str(total)),
+            commentaire=notes
+        )
+
+        # Créer les lignes de commande
+        for ligne in lignes:
+            LigneCommande.objects.create(
+                commande=commande,
+                reference_produit=ligne['reference'],
+                nom_produit=ligne['nom'],
+                quantite=ligne['quantite'],
+                prix_unitaire=Decimal(str(ligne['prix'])),
+                total_ligne=Decimal(str(ligne['total']))
+            )
+
+        # Générer le fichier CSV EDI
+        try:
+            csv_path = generer_csv_edi(commande, client_distant, lignes)
+            print(f"Fichier EDI généré: {csv_path}")
+            messages.info(request, f"Fichier EDI généré: {csv_path}")
+        except Exception as e:
+            error_msg = f"Erreur génération EDI: {e}\n{traceback.format_exc()}"
+            print(error_msg)
+            messages.warning(request, f"Erreur génération EDI: {e}")
+
+        # Vider le panier et la session recap
+        request.session['panier'] = {}
+        request.session.pop('commande_recap', None)
+        request.session.modified = True
+
+        messages.success(request, 'Votre commande a été envoyée avec succès !')
+        return redirect('commandes:confirmation')
+
+    except Exception as e:
+        messages.error(request, f'Erreur lors de l\'envoi de la commande : {str(e)}')
+        return redirect('commandes:panier')
 
 
 @login_required

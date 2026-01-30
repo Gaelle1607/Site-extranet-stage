@@ -16,6 +16,7 @@ urlpatterns = [
     path('information/<int:utilisateur_id>/commandes/', views.commande_utilisateur, name='commande_utilisateur'),
     path('inscription/',views.inscription, name='inscription'),
     path('api/recherche-clients/', views.recherche_clients_api, name='recherche_clients_api'),
+    path('api/verifier-mdp/<int:utilisateur_id>/', views.verifier_mot_de_passe_api, name='verifier_mot_de_passe_api'),
     path('profil/', views.profil_admin, name='profil_admin'),
     path('profil/mot-de-passe/', views.changer_mot_de_passe_admin, name='changer_mot_de_passe_admin'),
     path('reset-password/', views.reset_password_admin, name='reset_password_admin'),

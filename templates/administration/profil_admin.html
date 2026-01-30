@@ -30,7 +30,7 @@
                 <h5 class="mb-0"><i class="bi bi-key"></i> Changer le mot de passe</h5>
             </div>
             <div class="card-body">
-                <form method="post" action="{% url 'administration:changer_mot_de_passe_admin' %}">
+                <form method="post" action="{% url 'administration:changer_mot_de_passe_admin' %}" id="form-mdp-admin">
                     {% csrf_token %}
 
                     <div class="mb-3">
@@ -46,21 +46,27 @@
                     <div class="mb-3">
                         <label for="nouveau_mdp" class="form-label">Nouveau mot de passe</label>
                         <div class="input-group">
-                            <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required>
+                            <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required minlength="4">
                             <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nouveau_mdp">
                                 <i class="bi bi-eye"></i>
                             </button>
                         </div>
                         <div class="form-text">Au moins 4 caractères.</div>
+                        <div id="mdp-ancien-error" class="invalid-feedback" style="display: none;">
+                            Le nouveau mot de passe doit être différent de l'ancien.
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="confirm_mdp" class="form-label">Confirmer le nouveau mot de passe</label>
                         <div class="input-group">
-                            <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required>
+                            <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required minlength="4">
                             <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_mdp">
                                 <i class="bi bi-eye"></i>
                             </button>
+                        </div>
+                        <div id="mdp-error" class="invalid-feedback" style="display: none;">
+                            Les mots de passe ne correspondent pas.
                         </div>
                     </div>
 
@@ -74,4 +80,61 @@
 </div>
 
 <script src="{% static 'js/toggle-password.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-mdp-admin');
+    const ancienMdp = document.getElementById('ancien_mdp');
+    const nouveauMdp = document.getElementById('nouveau_mdp');
+    const confirmMdp = document.getElementById('confirm_mdp');
+    const errorDiv = document.getElementById('mdp-error');
+    const errorAncienDiv = document.getElementById('mdp-ancien-error');
+
+    function verifierMdpCorrespondance() {
+        if (confirmMdp.value && nouveauMdp.value !== confirmMdp.value) {
+            confirmMdp.classList.add('is-invalid');
+            errorDiv.style.display = 'block';
+            return false;
+        } else {
+            confirmMdp.classList.remove('is-invalid');
+            errorDiv.style.display = 'none';
+            return true;
+        }
+    }
+
+    function verifierMdpDifferent() {
+        if (nouveauMdp.value && ancienMdp.value && nouveauMdp.value === ancienMdp.value) {
+            nouveauMdp.classList.add('is-invalid');
+            errorAncienDiv.style.display = 'block';
+            return false;
+        } else {
+            nouveauMdp.classList.remove('is-invalid');
+            errorAncienDiv.style.display = 'none';
+            return true;
+        }
+    }
+
+    // Vérification en temps réel
+    confirmMdp.addEventListener('input', verifierMdpCorrespondance);
+    nouveauMdp.addEventListener('input', function() {
+        verifierMdpCorrespondance();
+        verifierMdpDifferent();
+    });
+    ancienMdp.addEventListener('input', verifierMdpDifferent);
+
+    // Vérification à la soumission
+    form.addEventListener('submit', function(e) {
+        const correspondanceOk = verifierMdpCorrespondance();
+        const differentOk = verifierMdpDifferent();
+
+        if (!correspondanceOk || !differentOk) {
+            e.preventDefault();
+            if (!differentOk) {
+                nouveauMdp.focus();
+            } else {
+                confirmMdp.focus();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
