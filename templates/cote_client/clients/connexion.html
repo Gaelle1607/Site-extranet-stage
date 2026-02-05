@@ -5,11 +5,11 @@
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-5 col-lg-4">
-        <!-- Card de connexion -->
+        <!-- Carte de connexion -->
         <div class="card shadow">
             <div class="card-body p-5">
-                
-                <!-- En-tête / logo et titre -->
+
+                <!-- En-tête avec logo textuel -->
                 <div class="text-center mb-4">
                     <h1 class="h3 mb-1" style="font-family: 'Poppins', sans-serif; font-weight: 700; letter-spacing: 1px;">
                         GIFFAUD GROUPE
@@ -22,7 +22,7 @@
                 <form method="post">
                     {% csrf_token %}
 
-                    <!-- Erreurs globales du formulaire -->
+                    <!-- Erreurs globales -->
                     {% if form.non_field_errors %}
                     <div class="alert alert-danger">
                         {% for error in form.non_field_errors %}
@@ -68,12 +68,12 @@
             </div>
         </div>
 
-        <!-- Message d'aide / contact -->
+        <!-- Message d'aide -->
         <p class="text-center text-muted mt-4">
             <small>Contactez votre commercial pour obtenir vos identifiants</small>
         </p>
 
-        <!-- Lien discret pour admin -->
+        <!-- Lien accès administrateur -->
         <p class="text-center mt-2">
             <a href="{% url 'administration:reset_password_admin' %}" class="text-muted small" style="opacity: 0.6;">
                 <i class="bi bi-shield-lock"></i> Accès administrateur
@@ -93,16 +93,16 @@
             <form method="post" action="{% url 'clients:demande_mdp' %}">
                 {% csrf_token %}
                 <div class="modal-body">
-                    <p class="text-muted">Entrez votre identifiant. Votre demande sera transmise à l'administrateur qui réinitialisera votre mot de passe.</p>
+                    <p class="text-muted">Entrez votre adresse email. Vous recevrez un lien pour réinitialiser votre mot de passe.</p>
                     <div class="mb-3">
-                        <label for="username_mdp" class="form-label">Identifiant</label>
-                        <input type="text" class="form-control" id="username_mdp" name="username" required>
+                        <label for="email_mdp" class="form-label">Adresse email</label>
+                        <input type="email" class="form-control" id="email_mdp" name="email" placeholder="email@exemple.com" required>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send"></i> Envoyer la demande
+                        <i class="bi bi-send"></i> Envoyer le lien
                     </button>
                 </div>
             </form>

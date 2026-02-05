@@ -729,3 +729,127 @@ a {
 .btn-valider-commande i {
     margin-right: 0.5rem;
 }
+
+/* ===== Bouton retour en haut ===== */
+#btn-retour-haut {
+    position: fixed;
+    bottom: 20px;
+    right: 5px;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--giffaud-noir);
+    border-radius: 4px;
+    background-color: var(--giffaud-accent);
+    color: var(--giffaud-noir);
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s, background-color 0.3s;
+    z-index: 1000;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#btn-retour-haut:hover {
+    background-color: var(--giffaud-noir);
+    color: var(--giffaud-accent);
+}
+
+#btn-retour-haut.visible {
+    opacity: 0.8;
+    visibility: visible;
+}
+
+#btn-retour-haut.visible:hover {
+    opacity: 1;
+}
+
+/* ===== Page Commander ===== */
+/* Sur petit écran : masquer les flèches natives, afficher boutons +/- */
+.quantite-commande-input::-webkit-outer-spin-button,
+.quantite-commande-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.quantite-commande-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* Style des boutons +/- (visibles sur petit écran) */
+.quantite-groupe .btn-moins,
+.quantite-groupe .btn-plus {
+    padding: 0.1rem 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.quantite-groupe .quantite-commande-input {
+    border-left: 0;
+    border-right: 0;
+}
+
+.quantite-groupe .btn-moins:hover,
+.quantite-groupe .btn-plus:hover {
+    background-color: var(--giffaud-accent);
+    border-color: var(--giffaud-accent);
+    color: var(--giffaud-noir);
+}
+
+/* Sur très grand écran : afficher les flèches natives, masquer boutons +/- */
+@media (min-width: 1200px) {
+    .quantite-commande-input::-webkit-outer-spin-button,
+    .quantite-commande-input::-webkit-inner-spin-button {
+        -webkit-appearance: inner-spin-button;
+        appearance: auto;
+        opacity: 1;
+    }
+
+    .quantite-commande-input {
+        -moz-appearance: auto;
+        appearance: auto;
+    }
+
+    .quantite-groupe .btn-moins,
+    .quantite-groupe .btn-plus {
+        display: none;
+    }
+
+    .quantite-groupe .quantite-commande-input {
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+    }
+}
+
+/* Aligner les colonnes en hauteur */
+#commander-row {
+    display: flex;
+    align-items: stretch;
+}
+
+/* Le conteneur des produits prend la hauteur de la colonne droite */
+#produits-table-container {
+    overflow-y: auto;
+    max-height: none;
+}
+
+/* Sur grand écran, limiter la hauteur du tableau à celle de la colonne droite */
+@media (min-width: 992px) {
+    #commander-row {
+        align-items: flex-start;
+    }
+
+    #produits-table-container {
+        max-height: calc(100vh - 300px);
+        overflow-y: auto;
+    }
+
+    .produits-commande-section {
+        height: 100%;
+    }
+}

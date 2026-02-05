@@ -13,177 +13,161 @@
     <form method="post">
         {% csrf_token %}
 
-        <!-- Section informations client -->
-        <div class="info-client-section">
-            <div class="row gx-5 gy-3">
-                {% comment %} Chaque champ est en lecture seule sauf la date de livraison {% endcomment %}
-                <div class="col-lg-6">
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-building me-2"></i>Nom du client :
-                        </label>
-                        <div class="col-7">
-                            <input type="text" value="{{ client.nom }}" class="form-control" readonly>
+        <div class="row" id="commander-row">
+            <!-- Colonne gauche : Sélection des produits (en 2ème sur petit écran) -->
+            <div class="col-lg-8 d-flex flex-column order-2 order-lg-1">
+                <div class="produits-commande-section d-flex flex-column flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="button" id="vider-panier-btn" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Vider
+                            </button>
+                            <div class="position-relative" style="max-width: 250px;">
+                                <input type="text" id="recherche-produit" class="form-control form-control-sm pe-5" placeholder="Rechercher...">
+                                <button type="button" id="effacer-recherche" class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted p-0 me-2" style="display:none;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-lg-6">
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-info-circle me-2"></i>Complément :
-                        </label>
-                        <div class="col-7">
-                            <input type="text" value="{{ client.complement }}" class="form-control" readonly>
+                    {% if produits %}
+                        <div class="table-responsive flex-grow-1" id="produits-table-container">
+                            <table class="table table-sm table-hover mb-0 align-middle">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Produit</th>
+                                        <th class="text-end pe-4" style="width: 130px;">Prix HT</th>
+                                        <th class="text-center" style="width: 90px;">Qté</th>
+                                        <th class="text-end" style="width: 100px;">Sous-total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for produit in produits %}
+                                    <tr class="produit-ligne">
+                                        <td class="produit-nom">{{ produit.nom }}</td>
+                                        <td class="text-end text-nowrap pe-4">
+                                            <strong>{{ produit.prix|floatformat:2 }}</strong> €/{{ produit.unite }}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="input-group input-group-sm quantite-groupe" style="width: 80px; margin: 0 auto;">
+                                                <button type="button" class="btn btn-outline-secondary btn-moins" tabindex="-1">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <input type="number"
+                                                       name="qte_{{ produit.reference }}"
+                                                       min="0"
+                                                       value="{{ produit.panier_qte }}"
+                                                       data-prix="{{ produit.prix|unlocalize }}"
+                                                       data-reference="{{ produit.reference }}"
+                                                       class="form-control form-control-sm quantite-commande-input text-center px-0">
+                                                <button type="button" class="btn btn-outline-secondary btn-plus" tabindex="-1">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="text-end fw-bold sous-total-ligne text-nowrap">0.00 €</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-geo-alt me-2"></i>Adresse :
-                        </label>
-                        <div class="col-7">
-                            <input type="text" value="{{ client.adresse }}" class="form-control" readonly>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>Aucun produit disponible.
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-mailbox me-2"></i>Code postal :
-                        </label>
-                        <div class="col-7">
-                            <input type="text" value="{{ client.code_postal }}" class="form-control" readonly>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-pin-map me-2"></i>Ville :
-                        </label>
-                        <div class="col-7">
-                            <input type="text" value="{{ client.acheminement }}" class="form-control" readonly>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="row align-items-center mb-3">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-truck me-2"></i>Départ camions :
-                        </label>
-                        <div class="col-7">
-                            <input type="date" id="date-depart-camions" name="date_depart_camions" class="form-control" readonly>
-                        </div>
-                    </div>
-                    <div class="row align-items-center">
-                        <label class="col-5 col-form-label fw-bold">
-                            <i class="bi bi-calendar-event me-2"></i>Date de livraison :
-                        </label>
-                        <div class="col-7">
-                            <input type="date" id="date-livraison" name="date_livraison" class="form-control" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section produits -->
-        <div class="produits-commande-section mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
-                <div class="d-flex gap-2 align-items-center">
-                    <button type="button" id="vider-panier-btn" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash"></i> Vider la commande
-                    </button>
-                    <div class="position-relative" style="max-width: 300px;">
-                        <input type="text" id="recherche-produit" class="form-control pe-5" placeholder="Rechercher un produit...">
-                        <button type="button" id="effacer-recherche" class="btn btn-link position-absolute top-50 end-0 translate-middle-y text-muted" style="display:none;">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            {% if produits %}
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0 align-middle">
-                        <thead class="table-light sticky-top">
-                            <tr>
-                                <th>Produit</th>
-                                <th class="text-end" style="width: 140px;">Prix HT</th>
-                                <th class="text-center" style="width: 90px;">Qté</th>
-                                <th class="text-end" style="width: 100px;">Sous-total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for produit in produits %}
-                            <tr class="produit-ligne">
-                                <td class="produit-nom">{{ produit.nom }}</td>
-                                <td class="text-end text-nowrap">
-                                    <strong>{{ produit.prix|floatformat:2 }}</strong> €/{{ produit.unite }}
-                                </td>
-                                <td class="text-center">
-                                    <input type="number"
-                                           name="qte_{{ produit.reference }}"
-                                           min="0"
-                                           value="{{ produit.panier_qte }}"
-                                           data-prix="{{ produit.prix|unlocalize }}"
-                                           data-reference="{{ produit.reference }}"
-                                           class="form-control form-control-sm quantite-commande-input text-center"
-                                           style="width: 70px; margin: 0 auto;">
-                                </td>
-                                <td class="text-end fw-bold sous-total-ligne text-nowrap">0.00 €</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Total général -->
-                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                    <span class="fw-bold h5 mb-0">
-                        Total produits : <span id="total-quantite">0</span> articles
-                    </span>
-                    <div>
-                        <span class="fw-bold h5 me-3">Total HT :</span>
-                        <span class="fw-bold h4 mb-0" id="total-commande">0.00 €</span>
+            <!-- Colonne droite : Infos client, Total, Commentaires, Valider (en 1er sur petit écran) -->
+            <div class="col-lg-4 order-1 order-lg-2 mb-4 mb-lg-0" id="colonne-droite">
+                <!-- Informations client -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Informations client</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-building me-1"></i>Client</small>
+                            <div class="fw-bold">{{ client.nom }}</div>
+                        </div>
+                        {% if client.complement %}
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Complément</small>
+                            <div>{{ client.complement }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>Adresse</small>
+                            <div>{{ client.adresse }}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-mailbox me-1"></i>Code postal</small>
+                            <div>{{ client.code_postal }}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-pin-map me-1"></i>Ville</small>
+                            <div>{{ client.acheminement }}</div>
+                        </div>
+                        <hr>
+                        <div class="mb-2">
+                            <label class="form-label mb-1"><i class="bi bi-truck me-1"></i>Départ camions</label>
+                            <input type="date" id="date-depart-camions" name="date_depart_camions" class="form-control form-control-sm" readonly>
+                        </div>
+                        <div>
+                            <label class="form-label mb-1"><i class="bi bi-calendar-event me-1"></i>Date de livraison</label>
+                            <input type="date" id="date-livraison" name="date_livraison" class="form-control form-control-sm" required>
+                        </div>
                     </div>
                 </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>Aucun produit disponible.
-                </div>
-            {% endif %}
-        </div>
 
-        <!-- Commentaires / instructions -->
-        <div class="commentaire-section mt-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-chat-text me-2"></i> Commentaires / Instructions</h5>
+                <!-- Récapitulatif commande -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Récapitulatif</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total produits :</span>
+                            <span class="fw-bold"><span id="total-quantite">0</span> articles</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Total HT :</span>
+                            <span class="fw-bold h5 mb-0 text-primary" id="total-commande">0.00 €</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <textarea name="commentaires" class="form-control" rows="3" placeholder="Ajoutez vos instructions..."></textarea>
+
+                <!-- Commentaires -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-chat-text me-2"></i>Commentaires</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea name="commentaires" class="form-control" rows="3" placeholder="Ajoutez vos instructions..."></textarea>
+                    </div>
                 </div>
+
+                <!-- Bouton valider (visible sur grand écran) -->
+                <button type="submit" class="btn btn-valider-commande w-100 d-none d-lg-block">
+                    <i class="bi bi-check2-circle"></i> Valider la commande
+                </button>
+            </div>
+
+            <!-- Bouton valider (visible sur petit écran, après les produits) -->
+            <div class="col-12 order-3 d-lg-none mt-4">
+                <button type="submit" class="btn btn-valider-commande w-100">
+                    <i class="bi bi-check2-circle"></i> Valider la commande
+                </button>
             </div>
         </div>
-
-        <!-- Bouton valider la commande -->
-        <button type="submit" class="btn btn-valider-commande w-100 mt-4">
-            <i class="bi bi-check2-circle"></i> Valider la commande
-        </button>
     </form>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 {% load static %}
-<script src="{% static 'js/commander.js' %}?v=7"></script>
+<script src="{% static 'js/commander.js' %}?v=8"></script>
 {% endblock %}

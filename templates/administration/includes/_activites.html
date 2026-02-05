@@ -1,0 +1,95 @@
+<!-- Dernières activités -->
+<div class="card h-100">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Dernières activités</h5>
+    </div>
+    <div class="card-body">
+        {% if activites %}
+            <ul class="list-group list-group-flush">
+                {% for activite in activites %}
+                    {% if activite.type == 'commande' %}
+                    <a href="{% url 'administration:details_commande' activite.commande.id %}" class="list-group-item list-group-item-action px-0 text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-cart-check text-success me-3" style="font-size: 1.2rem;"></i>
+                            <div>
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% elif activite.type == 'utilisateur' %}
+                    <a href="{% url 'administration:information_utilisateur' activite.utilisateur.id %}" class="list-group-item list-group-item-action px-0 text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-plus text-primary me-3" style="font-size: 1.2rem;"></i>
+                            <div>
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </a>
+                    {% elif activite.type == 'suppression' %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-cart-x text-danger me-3" style="font-size: 1.2rem;"></i>
+                            <div class="flex-grow-1">
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                                <span class="badge bg-warning text-dark ms-2" data-countdown="{{ activite.temps_restant }}">
+                                    <i class="bi bi-clock"></i> <span class="countdown-time"></span>
+                                </span>
+                            </div>
+                            <form method="post" action="{% url 'administration:restaurer_commande' activite.commande_supprimee.id %}" class="ms-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Restaurer">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% elif activite.type == 'suppression_definitive' %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-trash-fill text-secondary me-3" style="font-size: 1.2rem;"></i>
+                            <div>
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif activite.type == 'suppression_utilisateur' %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-x text-danger me-3" style="font-size: 1.2rem;"></i>
+                            <div class="flex-grow-1">
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                                <span class="badge bg-warning text-dark ms-2" data-countdown="{{ activite.temps_restant }}">
+                                    <i class="bi bi-clock"></i> <span class="countdown-time"></span>
+                                </span>
+                            </div>
+                            <form method="post" action="{% url 'administration:restaurer_utilisateur' activite.utilisateur_supprime.id %}" class="ms-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Restaurer">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% elif activite.type == 'suppression_definitive_utilisateur' %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-fill-x text-secondary me-3" style="font-size: 1.2rem;"></i>
+                            <div>
+                                <span class="text-dark">{{ activite.description }}</span>
+                                <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="mb-0 text-muted">Aucune activité récente.</p>
+        {% endif %}
+    </div>
+</div>

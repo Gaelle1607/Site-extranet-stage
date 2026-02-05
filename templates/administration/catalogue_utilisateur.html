@@ -1,6 +1,6 @@
 {% extends 'administration/base_admin.html' %}
 
-{% block title %}Catalogue Clients{% endblock %}
+{% block title %}Catalogue Utilisateurs{% endblock %}
 
 {% block content %}
 <!-- Formulaire de recherche -->
@@ -25,15 +25,24 @@
                 {% for client in clients %}
                     <!-- Carte individuelle par client -->
                     <div class="col-sm-6 col-lg-3 mb-4">
-                        <a href="{% url 'administration:cadencier_client' client.code_tiers %}" class="card-link">
-                            <div class="card h-100 client-card">
+                        <div class="card h-100 client-card position-relative">
+                            <a href="{% url 'administration:cadencier_client' client.code_tiers %}" class="card-link stretched-link">
                                 <div class="card-body text-center">
                                     <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
                                     <h6 class="card-title mb-1">{{ client.nom }}</h6>
                                     <small class="text-muted">{{ client.code_tiers }}</small>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                            <!-- Bouton de suppression -->
+                            <form method="post" action="{% url 'administration:supprimer_utilisateur' client.id %}"
+                                  class="position-absolute top-0 end-0 m-2" style="z-index: 2;"
+                                  onsubmit="return confirm('Supprimer l\'utilisateur {{ client.nom }} ({{ client.code_tiers }}) et toutes ses commandes ?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer l'utilisateur">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 {% endfor %}
             </div>

@@ -1,145 +1,29 @@
 {% extends 'administration/base_admin.html' %}
+{% load static %}
 
 {% block title %}Accueil{% endblock %}
 
 {% block content %}
-<!-- Titre de la page -->
+<!-- En-tête de page -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-house"></i> Accueil</h1>
 </div>
 
-<!-- Petites cartes statistiques + Dernières activités -->
+<!-- Contenu principal - Layout 2 colonnes -->
 <div class="row g-3">
-    <!-- Colonne gauche: petites cartes + demandes mdp -->
+    <!-- Colonne gauche : Statistiques et éléments restaurables -->
     <div class="col-lg-6">
-        <div class="row g-2 mb-2">
-            <!-- Carte: Clients -->
-            <div class="col-md-4">
-                <a href="{% url 'administration:catalogue_clients' %}" class="card-link">
-                    <div class="card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="d-flex justify-content-between align-items-center w-100">
-                                <div>
-                                    <h6 class="text-muted mb-1">Clients</h6>
-                                    <h3 class="mb-0">{{ nb_clients }}</h3>
-                                </div>
-                                <div class="text-primary">
-                                    <i class="bi bi-people" style="font-size: 2rem;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Carte: Utilisateurs -->
-            <div class="col-md-4">
-                <a href="{% url 'administration:catalogue_utilisateur' %}" class="card-link">
-                    <div class="card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="d-flex justify-content-between align-items-center w-100">
-                                <div>
-                                    <h6 class="text-muted mb-1">Utilisateurs</h6>
-                                    <h3 class="mb-0">{{ nb_utilisateurs }}</h3>
-                                </div>
-                                <div class="text-primary">
-                                    <i class="bi bi-people" style="font-size: 2rem;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- Carte: Commandes -->
-            <div class="col-md-4">
-                <a href="{% url 'administration:liste_commande' %}" class="card-link">
-                    <div class="card h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="d-flex justify-content-between align-items-center w-100">
-                                <div>
-                                    <h6 class="text-muted mb-1">Commandes</h6>
-                                    <h3 class="mb-0">{{ nb_commandes }}</h3>
-                                </div>
-                                <div class="text-success">
-                                    <i class="bi bi-cart2" style="font-size: 2rem; color: black;"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Demandes de mot de passe (sous les 3 cartes) -->
-        {% if demandes_mdp %}
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark py-2">
-                <h6 class="mb-0">
-                    <i class="bi bi-key"></i> Demandes de mot de passe
-                    <span class="badge bg-danger">{{ nb_demandes_mdp }}</span>
-                </h6>
-            </div>
-            <div class="card-body py-2">
-                <ul class="list-group list-group-flush">
-                    {% for item in demandes_mdp %}
-                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-person-exclamation text-warning me-2"></i>
-                                <strong>{{ item.nom_client }}</strong>
-                                <small class="text-muted">({{ item.demande.utilisateur.user.username }})</small>
-                                <br>
-                                <small class="text-muted">{{ item.demande.date_demande|date:"d/m/Y H:i" }}</small>
-                            </div>
-                            <a href="{% url 'administration:information_utilisateur' item.demande.utilisateur.id %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-person-gear"></i>
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endif %}
+        {% include 'administration/includes/_cartes_statistiques.html' %}
+        {% include 'administration/includes/_commandes_supprimees.html' %}
+        {% include 'administration/includes/_utilisateurs_supprimes.html' %}
+        {% include 'administration/includes/_demandes_mdp.html' %}
     </div>
 
-    <!-- Colonne droite: Dernières activités -->
+    <!-- Colonne droite : Flux d'activité -->
     <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Dernières activités</h5>
-            </div>
-            <div class="card-body">
-                {% if activites %}
-                    <ul class="list-group list-group-flush">
-                        {% for activite in activites %}
-                            {% if activite.type == 'commande' %}
-                            <a href="{% url 'administration:details_commande' activite.commande.id %}" class="list-group-item list-group-item-action px-0 text-decoration-none">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-cart-check text-success me-3" style="font-size: 1.2rem;"></i>
-                                    <div>
-                                        <span class="text-dark">{{ activite.description }}</span>
-                                        <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
-                                    </div>
-                                </div>
-                            </a>
-                            {% elif activite.type == 'utilisateur' %}
-                            <a href="{% url 'administration:information_utilisateur' activite.utilisateur.id %}" class="list-group-item list-group-item-action px-0 text-decoration-none">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-person-plus text-primary me-3" style="font-size: 1.2rem;"></i>
-                                    <div>
-                                        <span class="text-dark">{{ activite.description }}</span>
-                                        <br><small class="text-muted">{{ activite.date|date:"d/m/Y H:i" }}</small>
-                                    </div>
-                                </div>
-                            </a>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="mb-0 text-muted">Aucune activité récente.</p>
-                {% endif %}
-            </div>
-        </div>
+        {% include 'administration/includes/_activites.html' %}
     </div>
 </div>
+
+<script src="{% static 'js/countdown.js' %}"></script>
 {% endblock %}

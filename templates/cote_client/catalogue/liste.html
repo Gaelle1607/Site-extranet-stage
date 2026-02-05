@@ -5,34 +5,33 @@
 {% block content %}
 <div class="row">
 
-    <!-- Colonne filtres -->
+    <!-- Colonne filtres (gauche) -->
     {% include 'cote_client/catalogue/filtres.html' %}
 
-    <!-- Colonne produits -->
+    <!-- Colonne produits (centre) -->
     <div class="col-md-7">
 
         <!-- Section favoris -->
         {% include 'cote_client/catalogue/sections_favoris.html' %}
 
-        <!-- Titre catalogue et nombre de produits -->
+        <!-- Titre et compteur -->
         <div class="titre_nb_produits mb-4">
             <h2>Catalogue</h2>
             <span class="text-muted">{{ produits|length }} produit{{ produits|length|pluralize }}</span>
         </div>
 
+        <!-- Grille des produits -->
         {% if produits %}
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" data-liste-limitee>
             {% for produit in produits %}
             <div class="col">
                 <div class="card h-100 produit-card">
 
-                    <!-- Informations produit -->
                     <div class="card-body">
                         <p class="text-muted small mb-1">{{ produit.reference }}</p>
                         <h5 class="card-title">{{ produit.nom }}</h5>
                     </div>
 
-                    <!-- Footer : prix, actions -->
                     <div class="card-footer bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
@@ -60,7 +59,7 @@
         </div>
 
         {% else %}
-        <!-- Message si aucun produit trouvé -->
+        <!-- Message si aucun produit -->
         <div class="text-center py-5">
             <i class="bi bi-inbox display-1 text-muted"></i>
             <h4 class="mt-3">Aucun produit trouvé</h4>
@@ -70,7 +69,7 @@
 
     </div>
 
-    <!-- Récapitulatif panier à droite -->
+    <!-- Colonne récapitulatif panier (droite) -->
     {% include 'cote_client/catalogue/recap_panier.html' %}
 
 </div>

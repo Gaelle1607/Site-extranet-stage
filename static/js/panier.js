@@ -1,24 +1,61 @@
-// Extranet B2B - JavaScript pour le panier
+/**
+ * =============================================================================
+ * PANIER.JS - Gestion du panier d'achat
+ * =============================================================================
+ *
+ * Ce module JavaScript gère toutes les interactions liées au panier d'achat
+ * de l'application Extranet Giffaud Groupe.
+ *
+ * Fonctionnalités principales :
+ *   - Ajout de produits au panier (AJAX)
+ *   - Modification des quantités avec debounce
+ *   - Suppression d'articles (avec confirmation)
+ *   - Mise à jour dynamique du récapitulatif latéral
+ *   - Notifications utilisateur (toasts Bootstrap)
+ *   - Restauration de la position de scroll après rechargement
+ *
+ * Architecture :
+ *   - Toutes les requêtes sont effectuées en AJAX pour éviter le rechargement
+ *   - Le header X-Requested-With identifie les requêtes AJAX côté serveur
+ *   - Le badge du panier et les totaux sont mis à jour dynamiquement
+ *
+ * Dépendances :
+ *   - Bootstrap 5 (pour les alertes et le style)
+ *   - Bootstrap Icons (pour les icônes)
+ *
+ * Projet : Extranet Giffaud Groupe
+ * =============================================================================
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Restaurer la position de scroll après rechargement
+    // =========================================================================
+    // RESTAURATION DE LA POSITION DE SCROLL
+    // =========================================================================
+    // Après un rechargement de page, restaure la position de scroll
+    // stockée en session storage pour améliorer l'expérience utilisateur
     const savedScrollPos = sessionStorage.getItem('scrollPos');
     if (savedScrollPos) {
         window.scrollTo(0, parseInt(savedScrollPos));
         sessionStorage.removeItem('scrollPos');
     }
 
-    // Ajout au panier en AJAX
+    // =========================================================================
+    // AJOUT AU PANIER EN AJAX
+    // =========================================================================
+    // Intercepte la soumission des formulaires d'ajout au panier
+    // pour les traiter en AJAX sans rechargement de page
     document.querySelectorAll('.ajouter-panier-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Indicateur de chargement sur le bouton
             const btn = form.querySelector('button[type="submit"]');
             const originalContent = btn.innerHTML;
             btn.classList.add('loading');
             btn.disabled = true;
 
+            // Envoi de la requête AJAX
             fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
@@ -28,15 +65,16 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                // Restauration du bouton
                 btn.innerHTML = originalContent;
                 btn.classList.remove('loading');
                 btn.disabled = false;
 
                 if (data.success) {
-                    // Mettre à jour le badge du panier
+                    // Mise à jour du badge du panier
                     updatePanierBadge(data.panier_count);
 
-                    // Mettre à jour le récap panier (sur la page catalogue)
+                    // Mise à jour du récap panier (sur la page catalogue)
                     if (data.lignes_panier) {
                         updateRecapPanier(data.lignes_panier, data.total_panier);
                     }
@@ -58,7 +96,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Modification quantité panier
+    // =========================================================================
+    // MODIFICATION DE QUANTITÉ AVEC DEBOUNCE
+    // =========================================================================
+    // Écoute les changements sur les champs de quantité
+    // Le debounce de 500ms évite les requêtes multiples pendant la saisie
     document.querySelectorAll('.quantite-input').forEach(function(input) {
         let timeout;
         input.addEventListener('change', function() {
@@ -86,11 +128,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    // Suppression du panier (page panier)
+    // =========================================================================
+    // SUPPRESSION D'ARTICLE (PAGE PANIER)
+    // =========================================================================
+    // Gère la suppression d'articles depuis la page panier avec confirmation
     document.querySelectorAll('.supprimer-ligne-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Confirmation avant suppression
             if (!confirm('Supprimer cet article ?')) return;
 
             fetch(form.action, {
@@ -135,7 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attacher les listeners pour le récap panier (page catalogue)
     attachSupprimerRecapListeners();
 
-    // Date de livraison minimum (aujourd'hui + 7 jours)
+    // =========================================================================
+    // DATE DE LIVRAISON MINIMUM
+    // =========================================================================
+    // Configure la date minimum de livraison à aujourd'hui + 7 jours
     const dateLivraison = document.getElementById('date-livraison');
     if (dateLivraison) {
         const today = new Date();
@@ -146,6 +195,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
+/**
+ * Soumet le formulaire de modification de quantité en AJAX.
+ *
+ * Cette fonction envoie la nouvelle quantité au serveur et met à jour
+ * l'interface utilisateur avec les nouveaux totaux.
+ *
+ * @param {HTMLFormElement} form - Le formulaire contenant les données
+ */
 function submitQuantiteForm(form) {
     fetch(form.action, {
         method: 'POST',
@@ -186,11 +244,21 @@ function submitQuantiteForm(form) {
     });
 }
 
+
+/**
+ * Met à jour le badge du nombre d'articles dans la navbar.
+ *
+ * Gère l'affichage du badge rouge avec animation de rebond.
+ * Crée le badge s'il n'existe pas, le supprime si le panier est vide.
+ *
+ * @param {number} count - Nombre d'articles dans le panier
+ */
 function updatePanierBadge(count) {
     const badge = document.getElementById('panier-badge');
     if (badge) {
         if (count > 0) {
             badge.textContent = count;
+            // Animation de rebond pour attirer l'attention
             badge.classList.add('cart-bounce');
             setTimeout(() => badge.classList.remove('cart-bounce'), 300);
         } else {
@@ -209,6 +277,12 @@ function updatePanierBadge(count) {
     }
 }
 
+
+/**
+ * Met à jour l'affichage du total du panier.
+ *
+ * @param {number} total - Montant total du panier en euros
+ */
 function updatePanierTotal(total) {
     const totalElement = document.querySelector('.panier-total');
     if (totalElement) {
@@ -216,6 +290,12 @@ function updatePanierTotal(total) {
     }
 }
 
+
+/**
+ * Met à jour le compteur d'articles dans le récapitulatif.
+ *
+ * @param {number} count - Nombre d'articles
+ */
 function updateNombreArticles(count) {
     // Mettre à jour le nombre d'articles dans le récapitulatif de la page panier
     const articlesElements = document.querySelectorAll('.card-body .d-flex.justify-content-between.mb-2 span:last-child');
@@ -226,6 +306,16 @@ function updateNombreArticles(count) {
     });
 }
 
+
+/**
+ * Reconstruit le récapitulatif du panier dans le bandeau latéral.
+ *
+ * Génère dynamiquement le HTML avec les lignes de produits,
+ * le total et les boutons d'action.
+ *
+ * @param {Array} lignes - Tableau des lignes du panier
+ * @param {number} total - Total du panier
+ */
 function updateRecapPanier(lignes, total) {
     const recapContainer = document.getElementById('recap-panier-content');
     if (!recapContainer) return;
@@ -285,6 +375,15 @@ function updateRecapPanier(lignes, total) {
     }
 }
 
+
+/**
+ * Récupère le token CSRF pour les requêtes AJAX.
+ *
+ * Cherche d'abord dans les inputs hidden du formulaire,
+ * puis dans les cookies en fallback.
+ *
+ * @returns {string} Le token CSRF ou chaîne vide
+ */
 function getCSRFToken() {
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (csrfInput) return csrfInput.value;
@@ -298,6 +397,13 @@ function getCSRFToken() {
     return '';
 }
 
+
+/**
+ * Attache les événements de suppression aux formulaires du récapitulatif.
+ *
+ * Cette fonction doit être appelée après chaque mise à jour du DOM
+ * du récapitulatif pour réattacher les listeners aux nouveaux éléments.
+ */
 function attachSupprimerRecapListeners() {
     document.querySelectorAll('.supprimer-recap-form').forEach(function(form) {
         form.addEventListener('submit', function(e) {
@@ -345,24 +451,28 @@ function attachSupprimerRecapListeners() {
     });
 }
 
-/**
- * showNotification
- * Affiche une notification toast sur la page
- * @param {string} message - Message à afficher
- * @param {string} type - Type d'alerte : success, danger, etc.
- */
 
+/**
+ * Affiche une notification toast à l'utilisateur.
+ *
+ * La notification apparaît en haut à droite de l'écran et disparaît
+ * automatiquement après 3 secondes. Une seule notification est
+ * affichée à la fois.
+ *
+ * @param {string} message - Message à afficher
+ * @param {string} type - Type Bootstrap : 'success', 'danger', 'warning', 'info'
+ */
 function showNotification(message, type) {
-    //Vérifie si une notification est déjà affichécation existe déjà et la supprime
+    // Vérifie si une notification existe déjà et la supprime
     const existingAlert = document.querySelector('.alert.position-fixed');
     if (existingAlert){
         existingAlert.remove();
     }
-    
+
     // Créer une notification toast
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alert.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
     alert.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>

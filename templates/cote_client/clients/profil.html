@@ -40,6 +40,11 @@
                         </p>
 
                         <p class="mb-2">
+                            <strong>Email :</strong><br>
+                            {{ user.email|default:"Non renseigné" }}
+                        </p>
+
+                        <p class="mb-2">
                             <strong>Complément :</strong><br>
                             {{ client.complement|default:"Non renseigné" }}
                         </p>

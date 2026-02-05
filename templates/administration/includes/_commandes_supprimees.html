@@ -1,0 +1,46 @@
+<!-- Commandes supprimées restaurables -->
+{% if commandes_supprimees %}
+<div class="card border-danger mb-2">
+    <div class="card-header bg-danger text-white py-2">
+        <h6 class="mb-0">
+            <i class="bi bi-trash"></i> Commandes supprimées
+            <span class="badge bg-light text-danger">{{ nb_commandes_supprimees }}</span>
+        </h6>
+    </div>
+    <div class="card-body py-2">
+        <ul class="list-group list-group-flush">
+            {% for item in commandes_supprimees %}
+                <li class="list-group-item px-0 py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-cart-x text-danger me-2"></i>
+                            <strong>{{ item.commande.numero }}</strong>
+                            <small class="text-muted">({{ item.nom_client }})</small>
+                            <br>
+                            <small class="text-muted">Supprimée le {{ item.commande.date_suppression|date:"d/m/Y H:i" }}</small>
+                            <span class="badge bg-warning text-dark ms-2" data-countdown="{{ item.temps_restant }}">
+                                <i class="bi bi-clock"></i> <span class="countdown-time"></span>
+                            </span>
+                        </div>
+                        <div class="btn-group">
+                            <form method="post" action="{% url 'administration:restaurer_commande' item.commande.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Restaurer">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'administration:supprimer_definitivement_commande' item.commande.id %}" class="d-inline"
+                                  onsubmit="return confirm('Supprimer définitivement la commande {{ item.commande.numero }} ?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer définitivement">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}

@@ -26,7 +26,12 @@ MOTS_IGNORES = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12', '15', '20', '25', '30', '50', '100',
     # Mots trop génériques
     'viande', 'piece', 'pieces', 'tranche', 'tranches', 'lot', 'x', 'n', 'type', 'vide', 'col',
-    'demi', 'sup', 'sel', 'sat', 'mensec', 'noir', 'sauc',
+    'demi', 'sup', 'sel', 'sat', 'mensec', 'noir', 'sauc', 'unite', 'vrac', 'colis', 'l', 'lunite','dlc','courte','fine',
+    'psh','skin','petit','pret','cuire',
+    # Mots trop courts ou génériques
+    'court', 'eco', 'cuisine', 'tranch', 'cais', 'grand', 'mere',
+    # Mots associés à bière (brune/blonde)
+    'brune', 'brunes', 'blonde', 'blondes',
 }
 
 
@@ -96,120 +101,222 @@ def generer_filtres_automatiques(produits, seuil_occurrences=3):
 # Filtres organisés par groupe
 # Chaque filtre : code -> {"label": affiché, "termes": [cherchés dans le libellé sans accents]}
 FILTRES_DISPONIBLES = {
-    "Format": {
-        "colis":        {"label": "Colis",          "termes": []},  # basé sur l'unité de vente
-        "kg":           {"label": "Vente au kg",    "termes": []},  # basé sur l'unité de vente
-        "barquette":    {"label": "Barquette",      "termes": ["barquette", "barquettes"]},
+    # ===== CONDITIONNEMENT =====
+    "Format / Conditionnement": {
+        "kg":           {"label": "Vente au kg",    "termes": []},  # basé sur unite_fact = 2
+        "unite":        {"label": "À l'unité",      "termes": []},  # basé sur unite_fact = 1
+        "barquette":    {"label": "Barquette",      "termes": ["barquette", "barquettes", "barq", "barqu"]},
+        "carton":       {"label": "Carton",         "termes": ["carton", "cartons", "cart"]},
         "seau":         {"label": "Seau",           "termes": ["seau", "seaux"]},
-        "s/v":          {"label": "S/Vide",         "termes": ["s/vide", "sous vide", "sous-vide"]},
+        "plateau":      {"label": "Plateau",        "termes": ["plateau"]},
+        "vrac":         {"label": "Vrac",           "termes": ["vrac"]},
+        "s/v":          {"label": "Sous vide",      "termes": ["s/vide", "sous vide", "sous-vide"]},
         "s/at":         {"label": "Sous atmosphère","termes": ["s/at", "sous atmosphere"]},
+        "opercule":     {"label": "Operculé",       "termes": ["opercule", "opercules", "operculee", "operculees"]},
+        "entier":       {"label": "Entier",         "termes": ["entier", "entiers", "entiere", "entieres"]},
         "quart":        {"label": "Quart",          "termes": ["quart", "quarts"]},
+        "tranchee":     {"label": "Tranchée",       "termes": ["tranchee", "tranchees"]},
+        "ficelle":      {"label": "Ficelle",        "termes": ["ficelle", "ficelles"]},
     },
+
+    # ===== VIANDES =====
     "Types de viandes": {
         "porc":         {"label": "Porc",           "termes": ["porc", "porcs"]},
         "bovin":        {"label": "Bovin",          "termes": ["boeuf", "boeufs", "veau", "veaux", "bovin", "bovins"]},
         "poulet":       {"label": "Poulet",         "termes": ["poulet", "poulets"]},
+        "dinde":        {"label": "Dinde",          "termes": ["dinde", "dindes"]},
         "canard":       {"label": "Canard",         "termes": ["canard", "canards"]},
+        "chapon":       {"label": "Chapon",         "termes": ["chapon", "chapons"]},
+        "pintade":      {"label": "Pintade",        "termes": ["pintade", "pintades"]},
         "lapin":        {"label": "Lapin",          "termes": ["lapin", "lapins"]},
         "saumon":       {"label": "Saumon",         "termes": ["saumon", "saumons"]},
     },
-    "Découpes / morceaux": {
-        "echine":       {"label": "Échine",         "termes": ["echine", "echines"]},
+
+    "Découpes / Morceaux": {
         "filet":        {"label": "Filet",          "termes": ["filet", "filets"]},
         "cote":         {"label": "Côte",           "termes": ["cote", "cotes"]},
+        "echine":       {"label": "Échine",         "termes": ["echine", "echines"]},
+        "epaule":       {"label": "Épaule",         "termes": ["epaule", "epaules"]},
+        "cuisse":       {"label": "Cuisse",         "termes": ["cuisse", "cuisses"]},
         "poitrine":     {"label": "Poitrine",       "termes": ["poitrine", "poitrines"]},
         "jambon":       {"label": "Jambon",         "termes": ["jambon", "jambons"]},
         "palette":      {"label": "Palette",        "termes": ["palette", "palettes"]},
-        "epaule":       {"label": "Épaule",         "termes": ["epaule", "epaules"]},
         "jarret":       {"label": "Jarret",         "termes": ["jarret", "jarrets"]},
-        "cuisse":       {"label": "Cuisse",         "termes": ["cuisse", "cuisses"]},
         "rouelle":      {"label": "Rouelle",        "termes": ["rouelle", "rouelles"]},
+        "mignon":       {"label": "Mignon",         "termes": ["mignon", "mignons"]},
         "onglet":       {"label": "Onglet",         "termes": ["onglet", "onglets"]},
         "araignee":     {"label": "Araignée",       "termes": ["araignee", "araignees"]},
-        "maigre":       {"label": "Maigre",         "termes": ["maigre", "maigres"]},
-        "gras":         {"label": "Gras",           "termes": ["gras"]},
         "noix":         {"label": "Noix",           "termes": ["noix"]},
+        "blancs":       {"label": "Blancs",         "termes": ["blancs", "blanc"]},
+        "emince":       {"label": "Émincé",         "termes": ["emince", "eminces"]},
+        "palet":        {"label": "Palet",          "termes": ["palet", "palets"]},
+        "joues":        {"label": "Joues",          "termes": ["joue", "joues"]},
+        "foie":         {"label": "Foie",           "termes": ["foie", "foies"]},
         "queue":        {"label": "Queue",          "termes": ["queue", "queues"]},
         "tete":         {"label": "Tête",           "termes": ["tete", "tetes"]},
-        "mignon":       {"label": "Mignon",         "termes": ["mignon", "mignons"]},
+        "maigre":       {"label": "Maigre",         "termes": ["maigre", "maigres"]},
+        "gras":         {"label": "Gras",           "termes": ["gras"]},
+        "paree":        {"label": "Parée",          "termes": ["paree", "parees", "pare", "pares"]},
     },
+
     "Spécifiques porc": {
         "travers":      {"label": "Travers",        "termes": ["travers"]},
         "ribs":         {"label": "Ribs",           "termes": ["ribs"]},
         "paletot":      {"label": "Paletot",        "termes": ["paletot", "paletots"]},
     },
+
+    # ===== CHARCUTERIE =====
     "Charcuterie": {
         "saucisse":     {"label": "Saucisse",       "termes": ["saucisse", "saucisses"]},
         "chipolata":    {"label": "Chipolata",      "termes": ["chipolata", "chipolatas", "chipo", "chipos"]},
         "merguez":      {"label": "Merguez",        "termes": ["merguez"]},
         "boudin":       {"label": "Boudin",         "termes": ["boudin", "boudins"]},
         "andouillette": {"label": "Andouillette",   "termes": ["andouillette", "andouillettes"]},
+        "chorizo":      {"label": "Chorizo",        "termes": ["chorizo", "chorizos"]},
+        "chorizettes":  {"label": "Chorizettes",    "termes": ["chorizette", "chorizettes"]},
+        "crepinettes":  {"label": "Crépinettes",    "termes": ["crepinette", "crepinettes"]},
+        "francfort":    {"label": "Francfort",      "termes": ["francfort", "francforts"]},
+        "strasbourg":   {"label": "Strasbourg",     "termes": ["strasbourg"]},
+        "cervelas":     {"label": "Cervelas",       "termes": ["cervelas"]},
         "saucisson":    {"label": "Saucisson",      "termes": ["saucisson", "saucissons"]},
         "rillettes":    {"label": "Rillettes",      "termes": ["rillettes"]},
         "rillauds":     {"label": "Rillauds",       "termes": ["rillauds"]},
         "pate":         {"label": "Pâté",           "termes": ["pate", "pates"]},
         "terrine":      {"label": "Terrines",       "termes": ["terrine", "terrines"]},
         "tortillade":   {"label": "Tortillades",    "termes": ["tortillade", "tortillades"]},
-        "tripes":       {"label": "Tripes / Boyaux","termes": ["tripes", "boyaux", "rognon", "rognons", "rein", "reins"]},
         "langouille":   {"label": "Langouille",     "termes": ["langouille", "langouilles"]},
+        "tripes":       {"label": "Tripes / Boyaux","termes": ["tripes", "boyaux", "rognon", "rognons", "rein", "reins"]},
     },
-    "Prêts à cuire": {
-        "paupiette":    {"label": "Paupiette",      "termes": ["paupiette", "paupiettes"]},
+
+    # ===== PREPARATIONS =====
+    "Préparations": {
+        "paupiette":    {"label": "Paupiette",      "termes": ["paupiette", "paupiettes", "paup"]},
         "brochette":    {"label": "Brochette",      "termes": ["brochette", "brochettes", "broch"]},
         "grillade":     {"label": "Grillade",       "termes": ["grillade", "grillades"]},
+        "roti":         {"label": "Rôti",           "termes": ["roti", "rotis"]},
+        "saute":        {"label": "Sauté",          "termes": ["saute", "sautes"]},
+        "farce":        {"label": "Farce / Farci",  "termes": ["farce", "farces", "farci", "farcis", "farcie", "farcies"]},
+        "marinade":     {"label": "Marinade",       "termes": ["marinade", "marinades", "marine", "marines"]},
+        "confites":     {"label": "Confit",         "termes": ["confite", "confites", "confit", "confits"]},
+        "saumure":      {"label": "Saumure",        "termes": ["saumure", "saumures", "saumuree", "saumurees"]},
+        "brasse":       {"label": "Brassé / Braisé","termes": ["brasse", "brasses", "braisee", "braisees"]},
+        "precuit":      {"label": "Précuit",        "termes": ["precuit", "precuits", "pre-cuit"]},
         "barbecue":     {"label": "Barbecue",       "termes": ["barbecue", "barbecues", "bbq"]},
         "wok":          {"label": "Wok",            "termes": ["wok", "woks"]},
-        "saute":        {"label": "Sauté",          "termes": ["saute", "sautes"]},
-        "tomates_farcies": {"label": "Tomates farcies", "termes": ["tomates farcies", "tomate farcie"]},
-        "paysanne":     {"label": "Paysanne",       "termes": ["paysanne", "paysannes"]},
-        "surprise_paprika": {"label": "Surprise paprika", "termes": ["surprise paprika"]},
         "tartinable":   {"label": "Tartinable",     "termes": ["tartinable", "tartinables"]},
-        "roti":         {"label": "Rôti",           "termes": ["roti", "rotis"]},
-        "precuit":      {"label": "Précuit",        "termes": ["precuit", "precuits", "pre-cuit"]},
-        "orloff":       {"label": "Orloff",         "termes": ["orloff"]},
+        "assort":       {"label": "Assortiment",    "termes": ["assort", "assortiment", "assortiments"]},
+        "cassolettes":  {"label": "Cassolettes",    "termes": ["cassolette", "cassolettes"]},
+        "gourdinade":   {"label": "Gourdinade",     "termes": ["gourdinade", "gourdinades"]},
+        "delice":       {"label": "Délice",         "termes": ["delice", "delices"]},
+        "tapas":        {"label": "Tapas",          "termes": ["tapas"]},
+        "festif":       {"label": "Festif",         "termes": ["festif", "festifs", "festive", "festives"]},
     },
+
+    "Recettes régionales": {
+        "vendeenne":    {"label": "Vendéenne",      "termes": ["vendeenne", "vendeennes", "vendeen", "vendeens", "vendee", "ven"]},
+        "toulouse":     {"label": "Toulouse",       "termes": ["toulouse"]},
+        "provencale":   {"label": "Provençale",     "termes": ["provencale", "provencales", "provencal"]},
+        "basquaise":    {"label": "Basquaise",      "termes": ["basquaise", "basquaises"]},
+        "savoyard":     {"label": "Savoyard",       "termes": ["savoyard", "savoyards", "savoyarde", "savoyardes"]},
+        "montagnard":   {"label": "Montagnard",     "termes": ["montagnard", "montagnards", "montagnarde", "montagnardes"]},
+        "tartiflette":  {"label": "Tartiflette",    "termes": ["tartiflette", "tartiflettes"]},
+        "choucroute":   {"label": "Choucroute",     "termes": ["choucroute", "choucroutes"]},
+        "obernois":     {"label": "Obernois",       "termes": ["obernois", "obernoise", "obernoises"]},
+        "potee":        {"label": "Potée",          "termes": ["potee", "potees"]},
+        "campagne":     {"label": "Campagne",       "termes": ["campagne", "campagnes"]},
+        "paysanne":     {"label": "Paysanne",       "termes": ["paysanne", "paysannes"]},
+        "grand_mere":   {"label": "Grand-mère",     "termes": ["grand mere", "grand-mere", "grandmere"]},
+        "vigneronne":   {"label": "Vigneronne",     "termes": ["vigneronne", "vigneronnes"]},
+        "orloff":       {"label": "Orloff",         "termes": ["orloff"]},
+        "brasero":      {"label": "Brasero",        "termes": ["brasero", "braseros"]},
+        "maitre_hotel": {"label": "Maître d'hôtel", "termes": ["maitre", "hotel"]},
+        "tomates_farcies": {"label": "Tomates farcies", "termes": ["tomates farcies", "tomate farcie"]},
+        "surprise_paprika": {"label": "Surprise paprika", "termes": ["surprise paprika"]},
+    },
+
+    "Recettes du monde": {
+        "mexicaines":   {"label": "Mexicaines",     "termes": ["mexicaine", "mexicaines", "mexicain", "mexicains", "mex", "tex"]},
+        "antillais":    {"label": "Antillais",      "termes": ["antillais", "antillaise", "antillaises"]},
+        "andalou":      {"label": "Andalou",        "termes": ["andalou", "andalous", "andalouse", "andalouses"]},
+        "italienne":    {"label": "Italienne",      "termes": ["italienne", "italiennes", "italien", "italiens"]},
+        "indienne":     {"label": "Indienne",       "termes": ["indienne", "indiennes", "indien", "indiens"]},
+        "tandoori":     {"label": "Tandoori",       "termes": ["tandoori", "tandooris"]},
+        "massala":      {"label": "Massala",        "termes": ["massala", "masala"]},
+        "norvegien":    {"label": "Norvégien",      "termes": ["norvegien", "norvegiens", "norvegienne", "norvegiennes"]},
+    },
+
+    # ===== CONSERVATION =====
     "Conservation": {
         "frais":        {"label": "Frais",          "termes": ["frais"]},
         "surgele":      {"label": "Surgelé",        "termes": ["surgele", "surgeles", "congele", "congeles"]},
+        "crues":        {"label": "Crues",          "termes": ["crues", "crue"]},
+        "cuit":         {"label": "Cuit",           "termes": ["cuit", "cuits", "cuite", "cuites"]},
+        "sale":         {"label": "Salé",           "termes": ["sale", "sales", "salee", "salees"]},
+        "fume":         {"label": "Fumé",           "termes": ["fume", "fumes", "fumee", "fumees"]},
     },
 
+    # ===== QUALITÉ =====
+    "Labels / Qualité": {
+        "fermiere":     {"label": "Viande fermière","termes": ["fermiere", "fermieres", "fermier", "fermiers"]},
+        "label_rouge":  {"label": "Label Rouge",    "termes": ["label rouge"]},
+        "bbc":          {"label": "Bleu Blanc Coeur","termes": ["bleu blanc coeur", "bbc"]},
+        "vpf":          {"label": "VPF (Porc Français)", "termes": ["vpf"]},
+        "vbf":          {"label": "VBF (Bovin Français)", "termes": ["vbf"]},
+    },
+
+    # ===== FROMAGES =====
     "Fromages": {
         "comte":        {"label": "Comté",          "termes": ["comte", "comtes"]},
         "emmental":     {"label": "Emmental",       "termes": ["emmental", "emmentals"]},
-        "chevre":       {"label": "Chèvre",         "termes": ["chevre", "chevres"]},
         "reblochon":    {"label": "Reblochon",      "termes": ["reblochon", "reblochons"]},
+        "chevre":       {"label": "Chèvre",         "termes": ["chevre", "chevres"]},
         "camenbert":    {"label": "Camembert",      "termes": ["camenbert", "camenberts", "camembert", "camemberts"]},
         "bleu":         {"label": "Bleu",           "termes": ["bleu d'auvergne", "bleu de bresse", "bleu de gex", "fourme", "fourmes"]},
     },
 
-    "Qualité": {
-        "fermiere":     {"label": "Viande fermière","termes": ["fermiere", "fermieres", "fermier", "fermiers"]},
-        "bbc":          {"label": "Bleu Blanc Coeur","termes": ["bleu blanc coeur", "bbc"]},
-        "label_rouge":  {"label": "Label Rouge",    "termes": ["label rouge"]},
-        "vpf" :  {"label": "Viande de Porc Française",    "termes": ["vpf"]},
-    },
-    "Origine": {
-        "vendeenne":    {"label": "Vendéenne",      "termes": ["vendeenne", "vendeennes", "vendeen", "vendeens", "vendee"]},
-        "toulouse":     {"label": "Toulouse",       "termes": ["toulouse"]},
-    },
-
-    "Saveurs / Arômes": {
-        "nature":       {"label": "Nature",         "termes": ["nature", "natures"]},
-        "trad":         {"label": "Traditionnelle", "termes": ["trad", "traditionnelle", "traditionnelles", "traditionnel", "traditionnels"]},
+    # ===== SAVEURS =====
+    "Épices / Aromates": {
         "piment":       {"label": "Pimenté",        "termes": ["piment", "piments", "pimente", "pimentes"]},
-        "espelette":    {"label": "Espelette",      "termes": ["espelette"]},
-        "citron":       {"label": "Citron",         "termes": ["citron", "citrons"]},
+        "paprika":      {"label": "Paprika",        "termes": ["paprika"]},
+        "espelette":    {"label": "Espelette",      "termes": ["espelette", "espel"]},
+        "poivres":      {"label": "Poivres",        "termes": ["poivre", "poivres"]},
         "thym":         {"label": "Thym",           "termes": ["thym", "thyms"]},
-        "fume":         {"label": "Fumé",           "termes": ["fume", "fumes", "fumee", "fumees"]},
         "herbes":       {"label": "Aux herbes",     "termes": ["herbe", "herbes"]},
-        "echalote":     {"label": "Échalote",       "termes": ["echalote", "echalotes"]},
-        
+        "ail":          {"label": "Ail",            "termes": ["ail", "ails"]},
+        "persillade":   {"label": "Persillade",     "termes": ["persillade", "persillades"]},
+        "persillee":    {"label": "Persillée",      "termes": ["persillee", "persillees", "persille", "persilles"]},
     },
 
+    "Garnitures / Accompagnements": {
+        "oignons":      {"label": "Oignons",        "termes": ["oignon", "oignons"]},
+        "echalote":     {"label": "Échalote",       "termes": ["echalote", "echalotes"]},
+        "tomates":      {"label": "Tomates",        "termes": ["tomate", "tomates"]},
+        "legumes":      {"label": "Légumes",        "termes": ["legume", "legumes"]},
+        "mogette":      {"label": "Mogette",        "termes": ["mogette", "mogettes"]},
+        "coco":         {"label": "Coco",           "termes": ["coco", "cocos"]},
+        "pruneaux":     {"label": "Pruneaux",       "termes": ["pruneaux", "pruneau"]},
+        "abricots":     {"label": "Abricots",       "termes": ["abricots", "abricot"]},
+        "marrons":      {"label": "Marrons",        "termes": ["marron", "marrons"]},
+        "raisins":      {"label": "Raisins",        "termes": ["raisin", "raisins"]},
+        "citron":       {"label": "Citron",         "termes": ["citron", "citrons"]},
+        "orange":       {"label": "Orange",         "termes": ["orange", "oranges"]},
+        "melon":        {"label": "Melon",          "termes": ["melon"]},
+        "muscadet":     {"label": "Muscadet",       "termes": ["muscadet", "muscadets"]},
+        "biere":        {"label": "Bière",          "termes": ["biere", "bieres"]},
+        "miel":         {"label": "Miel",           "termes": ["miel", "miels"]},
+    },
+
+    "Styles": {
+        "nature":       {"label": "Nature",         "termes": ["nature", "natures", "nat"]},
+        "naturel":      {"label": "Naturel",        "termes": ["naturel", "naturels", "naturelle", "naturelles"]},
+        "trad":         {"label": "Traditionnelle", "termes": ["trad", "traditionnelle", "traditionnelles", "traditionnel", "traditionnels"]},
+        "fine":         {"label": "Fine",           "termes": ["fine", "fines"]},
+    },
+
+    # ===== AUTRES =====
     "Autres": {
         "foie_gras":    {"label": "Foie gras",      "termes": ["foie gras"]},
         "magret":       {"label": "Magret",         "termes": ["magret", "magrets"]},
-        "miel":         {"label": "Miel",           "termes": ["miel", "miels"]}
     },
 }
 
@@ -244,9 +351,9 @@ def get_produits_client(utilisateur):
         return []
 
     with connections['logigvd'].cursor() as cursor:
-        # Requête 1 : catalogue + libellé produit (rapide, catalogue filtré par tiers)
+        # Requête 1 : catalogue + libellé produit + unite_fact (rapide, catalogue filtré par tiers)
         cursor.execute("""
-            SELECT c.prod, p.libelle
+            SELECT c.prod, p.libelle, p.unite_fact
             FROM catalogue c
             LEFT JOIN prod p ON c.prod = p.prod
             WHERE c.tiers = %s
@@ -258,6 +365,7 @@ def get_produits_client(utilisateur):
 
         codes_produits = [r[0] for r in catalogue_rows]
         libelles = {r[0]: r[1] for r in catalogue_rows}
+        unites_fact = {r[0]: r[2] for r in catalogue_rows}
 
         # Requête 2 : prix et quantités depuis comclilig, filtré par client via comcli
         placeholders = ','.join(['%s'] * len(codes_produits))
@@ -278,13 +386,15 @@ def get_produits_client(utilisateur):
         poids = float(ligne[2]) if ligne and ligne[2] else 0
         colis = int(ligne[3]) if ligne and ligne[3] else 0
 
-        # Déterminer l'unité de vente
-        if poids > 0:
+        # Déterminer l'unité de vente depuis unite_fact de la table prod
+        # 1 = unité, 2 = poids (kg)
+        unite_fact = unites_fact.get(prod_code)
+        if unite_fact == 1:
+            unite = 'unité'
+        elif unite_fact == 2:
             unite = 'kg'
-        elif colis > 0:
-            unite = 'Colis'
         else:
-            unite = ''
+            unite = 'unité'  # Par défaut
 
         if pu_base <= 0:
             continue
@@ -298,11 +408,11 @@ def get_produits_client(utilisateur):
             if any(terme in nom_normalise for terme in info["termes"])
         ]
 
-        # Tags basés sur l'unité de vente
+        # Tags basés sur l'unité de vente (unite_fact: 1=unité, 2=kg)
         if unite == 'kg':
             tags.append('kg')
-        elif unite == 'Colis':
-            tags.append('colis')
+        elif unite == 'unité':
+            tags.append('unite')
 
         produit = {
             'prod': prod_code,

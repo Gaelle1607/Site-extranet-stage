@@ -10,11 +10,15 @@
     <!-- Informations du compte -->
     <div class="col-md-6 mb-4">
         <div class="card h-100">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-person"></i> Compte</h5>
+                <a href="{% url 'administration:modifier_utilisateur' utilisateur.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
             </div>
             <div class="card-body">
                 <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.user.username }}</p>
+                <p><strong>Email :</strong> {{ utilisateur.user.email|default:"Non renseigné" }}</p>
                 <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
                 <p><strong>Date d'inscription :</strong> {{ utilisateur.user.date_joined|date:"d/m/Y H:i" }}</p>
                 <p><strong>Derniere connexion :</strong> {{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</p>
@@ -51,49 +55,6 @@
     </div>
 </div>
 
-<!-- Changement de mot de passe -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-key"></i> Changer le mot de passe</h5>
-    </div>
-    <div class="card-body">
-        <form method="post" action="{% url 'administration:changer_mot_de_passe' utilisateur.id %}" id="form-mdp">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-md-5 mb-3">
-                    <label for="nouveau_mdp" class="form-label">Nouveau mot de passe</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="nouveau_mdp" name="nouveau_mdp" required minlength="4">
-                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nouveau_mdp">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                    <div id="mdp-ancien-error" class="invalid-feedback" style="display: none;">
-                        Le mot de passe doit être différent de l'ancien.
-                    </div>
-                </div>
-                <div class="col-md-5 mb-3">
-                    <label for="confirm_mdp" class="form-label">Confirmer le mot de passe</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="confirm_mdp" name="confirm_mdp" required minlength="4">
-                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirm_mdp">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                    <div id="mdp-error" class="invalid-feedback" style="display: none;">
-                        Les mots de passe ne correspondent pas.
-                    </div>
-                </div>
-                <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-warning w-100">
-                        <i class="bi bi-key"></i> Modifier
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
 <a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary">
     <i class="bi bi-arrow-left"></i> Retour aux utilisateurs
 </a>
@@ -103,117 +64,11 @@
 <a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
     <i class="bi bi-cart2"></i> Voir les commandes
 </a>
-
-<script src="{% static 'js/toggle-password.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form-mdp');
-    const nouveauMdp = document.getElementById('nouveau_mdp');
-    const confirmMdp = document.getElementById('confirm_mdp');
-    const errorDiv = document.getElementById('mdp-error');
-    const errorAncienDiv = document.getElementById('mdp-ancien-error');
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    let mdpIdentiqueAncien = false;
-
-    function verifierMdpCorrespondance() {
-        if (confirmMdp.value && nouveauMdp.value !== confirmMdp.value) {
-            confirmMdp.classList.add('is-invalid');
-            errorDiv.style.display = 'block';
-            return false;
-        } else {
-            confirmMdp.classList.remove('is-invalid');
-            errorDiv.style.display = 'none';
-            return true;
-        }
-    }
-
-    // Vérification AJAX si le mdp est identique à l'ancien
-    let timeout;
-    function verifierMdpAncienTempsReel() {
-        clearTimeout(timeout);
-        if (!nouveauMdp.value || nouveauMdp.value.length < 4) {
-            nouveauMdp.classList.remove('is-invalid');
-            errorAncienDiv.style.display = 'none';
-            mdpIdentiqueAncien = false;
-            return;
-        }
-
-        timeout = setTimeout(async () => {
-            try {
-                const response = await fetch('{% url "administration:verifier_mot_de_passe_api" utilisateur.id %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: 'nouveau_mdp=' + encodeURIComponent(nouveauMdp.value)
-                });
-                const data = await response.json();
-                mdpIdentiqueAncien = data.identique;
-
-                if (mdpIdentiqueAncien) {
-                    nouveauMdp.classList.add('is-invalid');
-                    errorAncienDiv.style.display = 'block';
-                } else {
-                    nouveauMdp.classList.remove('is-invalid');
-                    errorAncienDiv.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-            }
-        }, 500);
-    }
-
-    // Vérification AJAX synchrone pour la soumission
-    async function verifierMdpAncienSync() {
-        if (!nouveauMdp.value || nouveauMdp.value.length < 4) {
-            return false;
-        }
-        try {
-            const response = await fetch('{% url "administration:verifier_mot_de_passe_api" utilisateur.id %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrfToken
-                },
-                body: 'nouveau_mdp=' + encodeURIComponent(nouveauMdp.value)
-            });
-            const data = await response.json();
-            return data.identique;
-        } catch (error) {
-            console.error('Erreur:', error);
-            return false;
-        }
-    }
-
-    // Vérification en temps réel
-    confirmMdp.addEventListener('input', verifierMdpCorrespondance);
-    nouveauMdp.addEventListener('input', function() {
-        verifierMdpCorrespondance();
-        verifierMdpAncienTempsReel();
-    });
-
-    // Vérification à la soumission
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        if (!verifierMdpCorrespondance()) {
-            confirmMdp.focus();
-            return;
-        }
-
-        // Vérification synchrone avant soumission
-        const estIdentique = await verifierMdpAncienSync();
-        if (estIdentique) {
-            nouveauMdp.classList.add('is-invalid');
-            errorAncienDiv.style.display = 'block';
-            nouveauMdp.focus();
-            return;
-        }
-
-        // Tout est OK, soumettre le formulaire
-        form.submit();
-    });
-});
-</script>
+<form method="post" action="{% url 'administration:supprimer_utilisateur' utilisateur.id %}" class="d-inline"
+      onsubmit="return confirm('Supprimer l\'utilisateur {{ utilisateur.user.username }} et toutes ses commandes ?');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger">
+        <i class="bi bi-trash"></i> Supprimer l'utilisateur
+    </button>
+</form>
 {% endblock %}
