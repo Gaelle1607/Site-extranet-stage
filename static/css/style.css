@@ -511,23 +511,33 @@ footer a {
 
 }
 
-@media (max-width: 1199.98px) {
-    /* Empiler quantité + bouton ajouter sur petit/moyen écran */
-    .ajouter-panier-form .input-group {
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-    }
+/* Formulaire ajout panier : bouton Ajouter toujours en dessous */
+.ajouter-panier-form .input-group {
+    flex-wrap: wrap !important;
+    justify-content: center;
+}
 
-    .ajouter-panier-form .input-group .form-control {
-        width: 80px;
-        flex: none;
-        border-radius: 0 !important;
-    }
+.ajouter-panier-form .quantite-input-panier {
+    flex: 0 0 auto !important;
+    width: 90px !important;
+    text-align: center;
+}
 
-    .ajouter-panier-form .input-group .btn {
-        border-radius: 0 !important;
-        width: 100%;
+/* Bouton Ajouter sur toute la largeur en dessous */
+.ajouter-panier-form .input-group > .btn-primary,
+.ajouter-panier-form .input-group > .btn-warning {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+    border-radius: 0 !important;
+}
+
+/* Petits écrans : largeur quantité 75px */
+@media (max-width: 575.98px) {
+    .ajouter-panier-form .quantite-input-panier {
+        width: 120px !important;
+        min-width: 120px !important;
+        max-width: 120px !important;
     }
 }
 
@@ -851,5 +861,133 @@ a {
 
     .produits-commande-section {
         height: 100%;
+    }
+}
+
+/* ===== Boutons +/- Panier (catalogue, recommandations, favoris) ===== */
+/* Par défaut (petits et grands écrans) : masquer les boutons +/-, afficher flèches natives */
+.btn-moins-panier,
+.btn-plus-panier {
+    display: none !important;
+}
+
+/* Style des boutons +/- (pour quand ils sont visibles) */
+.btn-moins-panier,
+.btn-plus-panier {
+    padding: 0.2rem 0.35rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Arrondi uniquement sur le côté extérieur */
+.btn-moins-panier {
+    border-radius: 0.375rem 0 0 0.375rem !important;
+}
+
+.btn-plus-panier {
+    border-radius: 0 0.375rem 0.375rem 0 !important;
+}
+
+.btn-moins-panier:hover,
+.btn-plus-panier:hover {
+    background-color: var(--giffaud-accent);
+    border-color: var(--giffaud-accent);
+    color: var(--giffaud-noir);
+}
+
+/* Écrans moyens (576px à 1199px) : afficher +/-, masquer flèches natives */
+@media (min-width: 576px) and (max-width: 1199.98px) {
+    .btn-moins-panier,
+    .btn-plus-panier {
+        display: inline-flex !important;
+    }
+
+    .quantite-input-panier::-webkit-outer-spin-button,
+    .quantite-input-panier::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+
+    .quantite-input-panier {
+        -moz-appearance: textfield;
+        appearance: textfield;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-radius: 0 !important;
+        width: 55px !important;
+        min-width: 55px !important;
+        max-width: 55px !important;
+    }
+}
+
+/* ===== Accordéon Filtres sur mobile ===== */
+
+/* Styles communs pour l'accordéon actif */
+.filtres-header-active {
+    cursor: pointer;
+    user-select: none;
+}
+
+.filtres-header-active:hover {
+    background-color: var(--giffaud-gris-clair);
+}
+
+.filtres-chevron {
+    transition: transform 0.3s ease;
+}
+
+.filtres-header[aria-expanded="true"] .filtres-chevron {
+    transform: rotate(180deg);
+}
+
+/* === Côté CLIENT : accordéon < 576px === */
+@media (min-width: 576px) {
+    #filtres-body {
+        display: block !important;
+    }
+}
+
+/* === Côté ADMIN : accordéon < 768px === */
+@media (max-width: 767.98px) {
+    /* Activer l'accordéon admin */
+    [data-bs-target="#filtres-body-admin"] {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    [data-bs-target="#filtres-body-admin"]:hover {
+        background-color: var(--giffaud-gris-clair);
+    }
+}
+
+@media (min-width: 768px) {
+    #filtres-body-admin {
+        display: block !important;
+    }
+
+    /* Désactiver l'accordéon admin sur grand écran */
+    [data-bs-target="#filtres-body-admin"] {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    /* Cacher le chevron admin */
+    [data-bs-target="#filtres-body-admin"] .filtres-chevron {
+        display: none !important;
+    }
+}
+
+/* Désactiver l'accordéon client sur écran >= 576px */
+@media (min-width: 576px) {
+    [data-bs-target="#filtres-body"] {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    [data-bs-target="#filtres-body"] .filtres-chevron {
+        display: none !important;
     }
 }

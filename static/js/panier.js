@@ -182,6 +182,31 @@ document.addEventListener('DOMContentLoaded', function() {
     attachSupprimerRecapListeners();
 
     // =========================================================================
+    // GESTION DES BOUTONS +/- POUR LES QUANTITÉS
+    // =========================================================================
+    document.querySelectorAll('.btn-moins-panier').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const input = btn.parentElement.querySelector('.quantite-input-panier');
+            if (input) {
+                const val = parseInt(input.value) || 1;
+                if (val > 1) {
+                    input.value = val - 1;
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-plus-panier').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const input = btn.parentElement.querySelector('.quantite-input-panier');
+            if (input) {
+                const val = parseInt(input.value) || 1;
+                input.value = val + 1;
+            }
+        });
+    });
+
+    // =========================================================================
     // DATE DE LIVRAISON MINIMUM
     // =========================================================================
     // Configure la date minimum de livraison à aujourd'hui + 7 jours

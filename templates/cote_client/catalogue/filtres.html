@@ -2,10 +2,19 @@
 <!-- Filtres catalogue -->
 <div class="col-md-2">
     <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
+        <!-- Header cliquable sur mobile pour déplier/replier -->
+        <div class="card-header filtres-header"
+             data-bs-toggle="collapse"
+             data-bs-target="#filtres-body"
+             aria-expanded="false"
+             aria-controls="filtres-body">
+            <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-funnel"></i> Filtres</span>
+                <i class="bi bi-chevron-down filtres-chevron d-sm-none"></i>
+            </h5>
         </div>
-        <div class="card-body">
+        <!-- Body des filtres (accordéon sur mobile) -->
+        <div class="card-body collapse" id="filtres-body">
             <form method="get">
 
                 <!-- Recherche par nom ou référence -->
