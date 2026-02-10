@@ -112,4 +112,4 @@ def cadencier_client(request, code_tiers):
         'filtres_groupes': filtres_groupes,
         'filtres_actifs': filtres_actifs,
     }
-    return render(request, 'administration/cadencier_client.html', context)
+    return render(request, 'administration/clients/cadencier_client.html', context)

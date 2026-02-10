@@ -46,4 +46,4 @@ def details_commande(request, commande_id):
         'commande': commande,
         'client': client,
     }
-    return render(request, 'administration/details_commande.html', context)
+    return render(request, 'administration/commandes/details_commande.html', context)

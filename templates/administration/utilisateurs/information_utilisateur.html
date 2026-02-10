@@ -19,7 +19,6 @@
             <div class="card-body">
                 <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.user.username }}</p>
                 <p><strong>Email :</strong> {{ utilisateur.user.email|default:"Non renseigné" }}</p>
-                <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
                 <p><strong>Date d'inscription :</strong> {{ utilisateur.user.date_joined|date:"d/m/Y H:i" }}</p>
                 <p><strong>Derniere connexion :</strong> {{ utilisateur.user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</p>
             </div>
@@ -38,6 +37,7 @@
                     {% if client.complement %}
                         <p><strong>Complement :</strong> {{ client.complement }}</p>
                     {% endif %}
+                    <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
                     {% if client.adresse %}
                         <p><strong>Adresse :</strong> {{ client.adresse }}</p>
                     {% endif %}
@@ -55,20 +55,22 @@
     </div>
 </div>
 
-<a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left"></i> Retour aux utilisateurs
-</a>
-<a href="{% url 'administration:cadencier_client' utilisateur.code_tiers %}" class="btn btn-outline-primary">
-    <i class="bi bi-card-list"></i> Voir le cadencier
-</a>
-<a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
-    <i class="bi bi-cart2"></i> Voir les commandes
-</a>
-<form method="post" action="{% url 'administration:supprimer_utilisateur' utilisateur.id %}" class="d-inline"
-      onsubmit="return confirm('Supprimer l\'utilisateur {{ utilisateur.user.username }} et toutes ses commandes ?');">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger">
-        <i class="bi bi-trash"></i> Supprimer l'utilisateur
-    </button>
-</form>
+<div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour aux utilisateurs
+    </a>
+    <a href="{% url 'administration:cadencier_client' utilisateur.code_tiers %}" class="btn btn-outline-primary">
+        <i class="bi bi-card-list"></i> Voir le cadencier
+    </a>
+    <a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
+        <i class="bi bi-cart2"></i> Voir les commandes
+    </a>
+    <form method="post" action="{% url 'administration:supprimer_utilisateur' utilisateur.id %}" class="d-inline"
+          onsubmit="return confirm('Supprimer l\'utilisateur {{ utilisateur.user.username }} et toutes ses commandes ?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Supprimer l'utilisateur
+        </button>
+    </form>
+</div>
 {% endblock %}

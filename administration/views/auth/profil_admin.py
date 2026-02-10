@@ -36,4 +36,4 @@ def profil_admin(request):
     context = {
         'page_title': 'Mon profil',
     }
-    return render(request, 'administration/profil_admin.html', context)
+    return render(request, 'administration/auth/profil_admin.html', context)

@@ -76,4 +76,4 @@ def commande_utilisateur(request, utilisateur_id):
         'nom_client': nom_client,
         'commandes': commandes,
     }
-    return render(request, 'administration/commande_utilisateur.html', context)
+    return render(request, 'administration/commandes/commande_utilisateur.html', context)

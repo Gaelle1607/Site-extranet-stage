@@ -21,10 +21,10 @@
 </head>
 <body>
     <!-- Barre de navigation admin -->
-    {% include 'administration/navbar.html' %}
+    {% include 'administration/includes/navbar.html' %}
 
     <!-- Menu latéral (sidebar) -->
-    {% include 'administration/sidebar.html' %}
+    {% include 'administration/includes/sidebar.html' %}
 
             <!-- Contenu principal -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4 content-wrapper">
@@ -48,6 +48,16 @@
     <script src="{% static 'js/liste_limite.js' %}?v=2"></script>
 
     {% block extra_js %}{% endblock %}
+
+    <!-- Pied de page -->
+    <footer class="footer-admin text-center py-3 mt-4">
+        <div class="container">
+            <span class="text-muted">
+                &copy; {{ "now"|date:"Y" }} Giffaud Groupe -
+                <a href="{% url 'catalogue:mentions_legales' %}" class="text-muted">Mentions légales</a>
+            </span>
+        </div>
+    </footer>
 
     <!-- Bouton retour en haut -->
     <button id="btn-retour-haut" title="Retour en haut">

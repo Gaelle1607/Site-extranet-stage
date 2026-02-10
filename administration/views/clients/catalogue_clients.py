@@ -133,4 +133,4 @@ def catalogue_clients(request):
         'clients': clients,
         'query': query,
     }
-    return render(request, 'administration/catalogue_clients.html', context)
+    return render(request, 'administration/clients/catalogue_clients.html', context)

@@ -24,6 +24,11 @@
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.sidebar .nav-link span,
+.sidebar .nav-link i {
+    background-color: transparent;
+}
+
 /* Actif */
 .sidebar .nav-link.active {
     color: var(--giffaud-accent);
@@ -102,4 +107,23 @@
 .client-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Footer admin */
+.footer-admin {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    margin-left: 0;
+}
+
+@media (min-width: 768px) {
+    .footer-admin {
+        margin-left: 16.666667%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .footer-admin {
+        margin-left: 60px;
+    }
 }

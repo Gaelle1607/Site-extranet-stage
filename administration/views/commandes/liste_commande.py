@@ -70,4 +70,4 @@ def liste_commande(request):
         'commandes': commandes_avec_client,
         'query': query,
     }
-    return render(request, 'administration/liste_commandes.html', context)
+    return render(request, 'administration/commandes/liste_commandes.html', context)

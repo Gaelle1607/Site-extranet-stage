@@ -87,4 +87,4 @@ def reset_password_admin(request):
             except User.DoesNotExist:
                 messages.error(request, 'Aucun administrateur trouvé avec ce nom d\'utilisateur.')
 
-    return render(request, 'administration/reset_password.html')
+    return render(request, 'administration/auth/reset_password.html')

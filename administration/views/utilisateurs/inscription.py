@@ -120,4 +120,4 @@ def inscription(request):
         'prefill_tiers': prefill_tiers,
         'prefill_nom': prefill_nom,
     }
-    return render(request, 'administration/inscription.html', context)
+    return render(request, 'administration/utilisateurs/inscription.html', context)

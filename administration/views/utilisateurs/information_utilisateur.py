@@ -87,4 +87,4 @@ def information_utilisateur(request, utilisateur_id):
         'utilisateur': utilisateur,
         'client': client_distant,
     }
-    return render(request, 'administration/information_utilisateur.html', context)
+    return render(request, 'administration/utilisateurs/information_utilisateur.html', context)

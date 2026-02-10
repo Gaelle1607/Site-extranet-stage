@@ -129,4 +129,4 @@ def catalogue_utilisateurs(request):
         'clients': clients_avec_infos,
         'query': query,
     }
-    return render(request, 'administration/catalogue_utilisateur.html', context)
+    return render(request, 'administration/utilisateurs/catalogue_utilisateur.html', context)

@@ -117,4 +117,4 @@ def modifier_utilisateur(request, utilisateur_id):
         'page_title': f'Modifier - {user.username}',
         'utilisateur': utilisateur,
     }
-    return render(request, 'administration/modifier_utilisateur.html', context)
+    return render(request, 'administration/utilisateurs/modifier_utilisateur.html', context)
