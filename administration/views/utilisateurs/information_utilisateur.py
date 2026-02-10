@@ -19,7 +19,7 @@ from django.shortcuts import render, get_object_or_404
 from django.db import connections
 
 from clients.models import Utilisateur
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

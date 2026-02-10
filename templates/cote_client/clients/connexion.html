@@ -48,8 +48,8 @@
                         <label for="id_password" class="form-label">Mot de passe</label>
                         <div class="input-group">
                             {{ form.password }}
-                            <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
-                                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                            <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password" tabindex="-1">
+                                <i class="bi bi-eye"></i>
                             </button>
                         </div>
                         {% if form.password.errors %}
@@ -118,5 +118,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/toggle_password.js' %}"></script>
+<script src="{% static 'js/toggle-password.js' %}"></script>
 {% endblock %}

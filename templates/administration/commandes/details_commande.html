@@ -21,7 +21,7 @@
                 </div>
                 <div class="col-md-6">
                     <p><strong>Date de commande :</strong> {{ commande.date_commande|date:"d/m/Y H:i" }}</p>
-                    <p><strong>Départ des camions :</strong> {{ commande.date_depart_camions|date:"d/m/Y"|default:"Non définie" }}</p>
+                    <p><strong>Départ des camions prévue :</strong> {{ commande.date_depart_camions|date:"d/m/Y"|default:"Non définie" }}</p>
                     <p><strong>Date de livraison prévue :</strong> {{ commande.date_livraison|date:"d/m/Y"|default:"Non définie" }}</p>
                 </div>
             </div>

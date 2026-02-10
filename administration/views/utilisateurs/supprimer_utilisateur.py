@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 
 from clients.models import Utilisateur, UtilisateurSupprime
 from commandes.models import Commande
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

@@ -22,7 +22,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 
 from clients.models import Utilisateur, DemandeMotDePasse
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

@@ -4,16 +4,17 @@ __INIT__.PY - Point d'entrée du package views de l'administration
 =============================================================================
 
 Ce fichier centralise tous les exports des vues de l'application administration.
-Chaque vue est définie dans son propre fichier (principe : 1 fichier = 1 fonction).
+Les vues sont organisées par catégorie dans des sous-dossiers.
 
 Organisation des vues :
-    - Utilitaires       : decorators.py (contrôle d'accès), filtres.py (filtrage)
-    - Dashboard         : dashboard.py (page d'accueil admin)
-    - Commandes         : liste, détails, suppression, restauration
-    - Utilisateurs      : catalogue, information, modification, suppression
-    - Clients           : catalogue_clients, cadencier
-    - APIs              : recherche_clients_api, verifier_mot_de_passe_api
-    - Profil admin      : profil, changement mot de passe, reset
+    - utils/        : decorators.py (contrôle d'accès), filtres.py (filtrage)
+    - commandes/    : liste, détails, suppression, restauration
+    - utilisateurs/ : catalogue, information, modification, suppression
+    - clients/      : catalogue_clients, cadencier
+    - api/          : recherche_clients_api, verifier_mot_de_passe_api
+    - auth/         : profil, changement mot de passe, reset
+    - legal/        : mentions légales
+    - dashboard.py  : page d'accueil admin
 
 Projet : Extranet Giffaud Groupe
 =============================================================================
@@ -22,8 +23,8 @@ Projet : Extranet Giffaud Groupe
 # =============================================================================
 # UTILITAIRES ET DÉCORATEURS
 # =============================================================================
-from .decorators import admin_required, is_admin, EDI_OUTPUT_DIR
-from .filtres import preparer_filtres, appliquer_filtres
+from .utils import admin_required, is_admin, EDI_OUTPUT_DIR
+from .utils import preparer_filtres, appliquer_filtres
 
 # =============================================================================
 # DASHBOARD
@@ -33,39 +34,48 @@ from .dashboard import dashboard
 # =============================================================================
 # GESTION DES COMMANDES
 # =============================================================================
-from .liste_commande import liste_commande
-from .details_commande import details_commande
-from .commande_utilisateur import commande_utilisateur
-from .supprimer_commande import supprimer_commande
-from .restaurer_commande import restaurer_commande
-from .supprimer_definitivement_commande import supprimer_definitivement_commande
+from .commandes import (
+    liste_commande,
+    details_commande,
+    commande_utilisateur,
+    supprimer_commande,
+    restaurer_commande,
+    supprimer_definitivement_commande,
+)
 
 # =============================================================================
 # GESTION DES UTILISATEURS
 # =============================================================================
-from .catalogue_utilisateurs import catalogue_utilisateurs
-from .information_utilisateur import information_utilisateur
-from .modifier_utilisateur import modifier_utilisateur
-from .changer_mot_de_passe import changer_mot_de_passe
-from .supprimer_utilisateur import supprimer_utilisateur
-from .restaurer_utilisateur import restaurer_utilisateur
-from .supprimer_definitivement_utilisateur import supprimer_definitivement_utilisateur
-from .verifier_mot_de_passe_api import verifier_mot_de_passe_api
-from .inscription import inscription
+from .utilisateurs import (
+    catalogue_utilisateurs,
+    information_utilisateur,
+    modifier_utilisateur,
+    changer_mot_de_passe,
+    supprimer_utilisateur,
+    restaurer_utilisateur,
+    supprimer_definitivement_utilisateur,
+    inscription,
+)
 
 # =============================================================================
 # GESTION DES CLIENTS (BASE DISTANTE)
 # =============================================================================
-from .catalogue_clients import catalogue_clients
-from .cadencier_client import cadencier_client
-from .recherche_clients_api import recherche_clients_api
+from .clients import catalogue_clients, cadencier_client
+
+# =============================================================================
+# APIS INTERNES
+# =============================================================================
+from .api import recherche_clients_api, verifier_mot_de_passe_api
 
 # =============================================================================
 # PROFIL ADMINISTRATEUR
 # =============================================================================
-from .profil_admin import profil_admin
-from .changer_mot_de_passe_admin import changer_mot_de_passe_admin
-from .reset_password_admin import reset_password_admin
+from .auth import profil_admin, changer_mot_de_passe_admin, reset_password_admin
+
+# =============================================================================
+# MENTIONS LÉGALES
+# =============================================================================
+from .legal import mentions_legales_admin
 
 # Liste explicite des exports publics du module
 __all__ = [
@@ -73,6 +83,8 @@ __all__ = [
     'admin_required',
     'is_admin',
     'EDI_OUTPUT_DIR',
+    'preparer_filtres',
+    'appliquer_filtres',
     # Dashboard
     'dashboard',
     # Commandes
@@ -90,15 +102,17 @@ __all__ = [
     'supprimer_utilisateur',
     'restaurer_utilisateur',
     'supprimer_definitivement_utilisateur',
-    'verifier_mot_de_passe_api',
+    'inscription',
     # Clients
     'catalogue_clients',
     'cadencier_client',
+    # APIs
     'recherche_clients_api',
-    # Inscription
-    'inscription',
+    'verifier_mot_de_passe_api',
     # Profil admin
     'profil_admin',
     'changer_mot_de_passe_admin',
     'reset_password_admin',
+    # Mentions légales
+    'mentions_legales_admin',
 ]

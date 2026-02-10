@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 from clients.models import UtilisateurSupprime, HistoriqueSuppressionUtilisateur
-from .decorators import admin_required, EDI_OUTPUT_DIR
+from ..utils.decorators import admin_required, EDI_OUTPUT_DIR
 
 
 @admin_required

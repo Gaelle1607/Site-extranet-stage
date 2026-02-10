@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 
 from clients.models import Utilisateur
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

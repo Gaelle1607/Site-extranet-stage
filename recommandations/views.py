@@ -30,7 +30,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from .services import obtenir_recommandations, obtenir_produits_favoris
 from catalogue.services import get_categories_client, get_produit_by_reference
-from administration.views.filtres import preparer_filtres, appliquer_filtres
+from administration.views.utils.filtres import preparer_filtres, appliquer_filtres
 
 
 @login_required

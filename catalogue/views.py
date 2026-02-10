@@ -35,7 +35,7 @@ import traceback
 from .services import get_produits_client, get_categories_client, get_produit_by_reference, get_client_distant
 
 # Import des fonctions de filtrage partagées avec le module administration
-from administration.views.filtres import preparer_filtres, appliquer_filtres
+from administration.views.utils.filtres import preparer_filtres, appliquer_filtres
 
 # Import des modèles de commandes
 from commandes.models import Commande, LigneCommande

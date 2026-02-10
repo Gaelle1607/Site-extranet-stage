@@ -22,8 +22,8 @@ from django.db import connections
 
 from clients.models import Utilisateur
 from catalogue.services import get_produits_client
-from .decorators import admin_required
-from .filtres import preparer_filtres, appliquer_filtres
+from ..utils.decorators import admin_required
+from ..utils.filtres import preparer_filtres, appliquer_filtres
 
 
 @admin_required

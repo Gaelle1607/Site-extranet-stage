@@ -21,7 +21,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth import update_session_auth_hash
 
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

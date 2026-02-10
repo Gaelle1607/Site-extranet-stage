@@ -109,4 +109,9 @@ urlpatterns = [
 
     # Réinitialisation du mot de passe admin (avec clé secrète)
     path('reset-password/', views.reset_password_admin, name='reset_password_admin'),
+
+    # =========================================================================
+    # MENTIONS LÉGALES
+    # =========================================================================
+    path('mentions-legales/', views.mentions_legales_admin, name='mentions_legales_admin'),
 ]

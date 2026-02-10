@@ -23,7 +23,7 @@ from django.contrib import messages
 
 from clients.models import Utilisateur
 from catalogue.models import ComCli
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

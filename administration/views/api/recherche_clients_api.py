@@ -19,7 +19,7 @@ Projet : Extranet Giffaud Groupe
 from django.http import JsonResponse
 from django.db import connections
 
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

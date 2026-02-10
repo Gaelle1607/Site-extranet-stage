@@ -43,21 +43,19 @@
         </div>
     </div>
 
+    <!-- Pied de page -->
+    <footer id="footer-admin" style="position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; background-color: var(--giffaud-noir); z-index: 9999 !important; padding: 1rem 0; text-align: center;">
+        <span style="color: rgba(255, 255, 255, 0.8);">
+            &copy; {{ "now"|date:"Y" }} Giffaud Groupe -
+            <a href="{% url 'administration:mentions_legales_admin' %}" style="color: var(--giffaud-accent);">Mentions légales</a>
+        </span>
+    </footer>
+
     <!-- Scripts JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/liste_limite.js' %}?v=2"></script>
 
     {% block extra_js %}{% endblock %}
-
-    <!-- Pied de page -->
-    <footer class="footer-admin text-center py-3 mt-4">
-        <div class="container">
-            <span class="text-muted">
-                &copy; {{ "now"|date:"Y" }} Giffaud Groupe -
-                <a href="{% url 'catalogue:mentions_legales' %}" class="text-muted">Mentions légales</a>
-            </span>
-        </div>
-    </footer>
 
     <!-- Bouton retour en haut -->
     <button id="btn-retour-haut" title="Retour en haut">

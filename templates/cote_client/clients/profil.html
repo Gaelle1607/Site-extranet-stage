@@ -77,10 +77,16 @@
                 <!-- Actions -->
                 <hr class="my-4">
 
-                <a href="{% url 'clients:modifier_mot_de_passe' %}"
-                   class="btn btn-primary">
-                    <i class="bi bi-key"></i> Modifier mon mot de passe
-                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'clients:modifier_email' %}"
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-envelope"></i> Modifier mon email
+                    </a>
+                    <a href="{% url 'clients:modifier_mot_de_passe' %}"
+                       class="btn btn-primary">
+                        <i class="bi bi-key"></i> Modifier mon mot de passe
+                    </a>
+                </div>
 
             </div>
         </div>

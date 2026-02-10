@@ -15,7 +15,7 @@ from django.shortcuts import render
 from django.db import connections
 
 from clients.models import Utilisateur
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

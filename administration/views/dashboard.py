@@ -24,7 +24,7 @@ from django.utils import timezone
 
 from clients.models import Utilisateur, DemandeMotDePasse, UtilisateurSupprime, HistoriqueSuppressionUtilisateur
 from commandes.models import Commande, CommandeSupprimee, HistoriqueSuppression
-from .decorators import admin_required
+from .utils.decorators import admin_required
 
 
 @admin_required

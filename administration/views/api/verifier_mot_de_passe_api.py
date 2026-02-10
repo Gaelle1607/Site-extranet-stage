@@ -15,7 +15,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
 from clients.models import Utilisateur
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

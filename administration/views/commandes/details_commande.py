@@ -12,7 +12,7 @@ Projet : Extranet Giffaud Groupe
 from django.shortcuts import render
 
 from commandes.models import Commande
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required

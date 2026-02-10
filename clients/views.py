@@ -268,6 +268,53 @@ def modifier_mot_de_passe(request):
     })
 
 
+@login_required
+def modifier_email(request):
+    """
+    Gère la modification de l'adresse email de l'utilisateur connecté.
+
+    Cette vue permet à l'utilisateur de changer son adresse email.
+    L'email est stocké dans le modèle User de Django.
+
+    Décorateurs :
+        @login_required : Redirige vers la page de connexion si non authentifié
+
+    Args:
+        request (HttpRequest): L'objet requête Django contenant :
+            - POST['email'] : Nouvelle adresse email
+
+    Returns:
+        HttpResponse:
+            - POST valide : Redirection vers 'clients:profil' avec message succès
+            - POST invalide : Rendu du template avec erreurs
+            - GET : Rendu du formulaire avec l'email actuel
+    """
+    utilisateur = request.user.utilisateur
+    client_distant = get_client_distant(utilisateur.code_tiers)
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+
+        # Validation de l'email
+        if not email:
+            messages.error(request, 'Veuillez saisir une adresse email.')
+        elif '@' not in email or '.' not in email:
+            messages.error(request, 'Veuillez saisir une adresse email valide.')
+        elif User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+            messages.error(request, 'Cette adresse email est déjà utilisée.')
+        else:
+            # Mise à jour de l'email
+            request.user.email = email
+            request.user.save()
+            messages.success(request, 'Votre adresse email a été modifiée avec succès.')
+            return redirect('clients:profil')
+
+    return render(request, 'cote_client/clients/modifier_email.html', {
+        'utilisateur': utilisateur,
+        'client': client_distant
+    })
+
+
 def demande_mot_de_passe(request):
     """
     Traite la demande de réinitialisation de mot de passe.

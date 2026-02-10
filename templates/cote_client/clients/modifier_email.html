@@ -1,0 +1,57 @@
+{% extends 'cote_client/base.html' %}
+
+{% block title %}Modifier mon email{% endblock %}
+
+{% block content %}
+<div class="row">
+
+    <!-- Menu latéral -->
+    {% include "cote_client/clients/menu_profil.html" %}
+
+    <!-- Contenu principal : formulaire de modification -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-envelope"></i> Modifier mon adresse email
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Adresse email -->
+                    <div class="mb-4">
+                        <label for="id_email" class="form-label">
+                            Nouvelle adresse email
+                        </label>
+                        <input type="email"
+                               name="email"
+                               id="id_email"
+                               class="form-control"
+                               value="{{ user.email }}"
+                               required
+                               placeholder="exemple@email.com">
+                        <div class="form-text">
+                            Cette adresse sera utilisée pour les notifications et la récupération de mot de passe.
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Enregistrer
+                        </button>
+                        <a href="{% url 'clients:profil' %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

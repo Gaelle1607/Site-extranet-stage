@@ -63,6 +63,10 @@ urlpatterns = [
     # Nécessite une authentification et l'ancien mot de passe
     path('profil/mot-de-passe/', views.modifier_mot_de_passe, name='modifier_mot_de_passe'),
 
+    # Formulaire de modification de l'adresse email
+    # Nécessite une authentification
+    path('profil/email/', views.modifier_email, name='modifier_email'),
+
     # =========================================================================
     # RÉINITIALISATION DE MOT DE PASSE
     # =========================================================================

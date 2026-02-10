@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 from commandes.models import Commande, CommandeSupprimee, LigneCommande
-from .decorators import admin_required
+from ..utils.decorators import admin_required
 
 
 @admin_required
