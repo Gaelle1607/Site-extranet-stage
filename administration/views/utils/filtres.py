@@ -16,10 +16,17 @@ Ces fonctions sont utilisées notamment dans la vue du cadencier client.
 Projet : Extranet Giffaud Groupe
 =============================================================================
 """
+from django.core.cache import cache
 from catalogue.services import FILTRES_DISPONIBLES, generer_filtres_automatiques, _normaliser
 
 
-def preparer_filtres(produits, seuil_occurrences=3):
+def _get_cache_key(produits):
+    """Génère une clé de cache basée sur les références produits."""
+    refs = sorted([p.get('reference', p.get('prod', '')) for p in produits])
+    return f"filtres_{hash(tuple(refs))}"
+
+
+def preparer_filtres(produits, seuil_occurrences=3, use_cache=True):
     """
     Prépare les filtres disponibles pour une liste de produits.
 
@@ -36,6 +43,7 @@ def preparer_filtres(produits, seuil_occurrences=3):
         seuil_occurrences (int): Nombre minimum de produits devant correspondre
                                  à un filtre automatique pour qu'il soit affiché.
                                  Défaut: 3
+        use_cache (bool): Utiliser le cache pour les filtres. Défaut: True
 
     Returns:
         tuple: Un triplet contenant :
@@ -43,6 +51,21 @@ def preparer_filtres(produits, seuil_occurrences=3):
             - filtres_groupes (dict): Filtres groupés par catégorie pour l'affichage
             - tags_disponibles (set): Ensemble des codes de tags utilisables
     """
+    # Vérifier le cache
+    cache_key = _get_cache_key(produits) if use_cache else None
+    if use_cache:
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            filtres_groupes, tags_disponibles, filtres_auto = cached_data
+            # Réappliquer les tags aux produits
+            for produit in produits:
+                libelle_normalise = _normaliser(produit.get('libelle', '') or '')
+                for code, info in filtres_auto.items():
+                    if any(terme in libelle_normalise for terme in info["termes"]):
+                        if code not in produit.get('tags', []):
+                            produit['tags'].append(code)
+            return produits, filtres_groupes, tags_disponibles
+
     # Générer les filtres automatiques à partir des libellés des produits
     # Ces filtres sont créés dynamiquement en analysant les mots-clés récurrents
     filtres_auto = generer_filtres_automatiques(produits, seuil_occurrences=seuil_occurrences)
@@ -91,6 +114,10 @@ def preparer_filtres(produits, seuil_occurrences=3):
         }
         if filtres_auto_valides:
             filtres_groupes["Filtres personnalisés"] = filtres_auto_valides
+
+    # Mettre en cache les résultats (5 minutes)
+    if use_cache and cache_key:
+        cache.set(cache_key, (filtres_groupes, tags_disponibles, filtres_auto), 300)
 
     return produits, filtres_groupes, tags_disponibles
 

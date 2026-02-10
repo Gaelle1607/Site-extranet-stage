@@ -24,25 +24,33 @@
                     <div class="col-md-6">
                         <h6 class="text-muted mb-3">Identité</h6>
 
+                        {% if client.nom %}
                         <p class="mb-2">
                             <strong>Nom Client :</strong><br>
                             {{ client.nom }}
                         </p>
+                        {% endif %}
 
+                        {% if user.username %}
                         <p class="mb-2">
                             <strong>Nom d'Utilisateur :</strong><br>
                             {{ user.username }}
                         </p>
+                        {% endif %}
 
+                        {% if user.email %}
                         <p class="mb-2">
                             <strong>Email :</strong><br>
-                            {{ user.email|default:"Non renseigné" }}
+                            {{ user.email }}
                         </p>
+                        {% endif %}
 
+                        {% if client.complement %}
                         <p class="mb-2">
                             <strong>Complément :</strong><br>
-                            {{ client.complement|default:"Non renseigné" }}
+                            {{ client.complement }}
                         </p>
+                        {% endif %}
 
                     </div>
 
@@ -50,25 +58,33 @@
                     <div class="col-md-6">
                         <h6 class="text-muted mb-3">Adresse</h6>
 
+                        {% if client.adresse %}
                         <p class="mb-2">
                             <strong>Adresse :</strong><br>
-                            {{ client.adresse|default:"Non renseigné" }}
+                            {{ client.adresse }}
                         </p>
+                        {% endif %}
 
+                        {% if client.cp %}
                         <p class="mb-2">
                             <strong>Code Postal :</strong><br>
-                            {{ client.cp|default:"Non renseigné" }}
+                            {{ client.cp }}
                         </p>
+                        {% endif %}
 
+                        {% if client.acheminement %}
                         <p class="mb-2">
                             <strong>Ville :</strong><br>
-                            {{ client.acheminement|default:"Non renseigné" }}
+                            {{ client.acheminement }}
                         </p>
+                        {% endif %}
 
+                        {% if client.tiers %}
                         <p class="mb-2">
                             <strong>Code client :</strong><br>
-                            {{ client.tiers|default:"N/A" }}
+                            {{ client.tiers }}
                         </p>
+                        {% endif %}
 
                     </div>
 

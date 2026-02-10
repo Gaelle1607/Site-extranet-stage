@@ -991,3 +991,30 @@ a {
         display: none !important;
     }
 }
+
+/* ===== Mise en évidence des filtres sélectionnés ===== */
+#accordionFiltres .form-check-input {
+    border-radius: 50%;
+}
+
+#accordionFiltres .form-check.filtre-actif {
+    background-color: rgba(200, 164, 92, 0.2);
+    border-radius: 3px;
+}
+
+#accordionFiltres .form-check.filtre-actif .form-check-label {
+    font-weight: 600;
+    color: var(--giffaud-noir);
+}
+
+/* Badge compteur sur le groupe d'accordéon */
+#accordionFiltres .accordion-button .badge-filtre-actif {
+    background-color: var(--giffaud-accent);
+    color: var(--giffaud-noir);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    font-style: normal;
+    font-weight: 600;
+}

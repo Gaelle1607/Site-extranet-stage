@@ -20,6 +20,8 @@ Projet : Extranet Giffaud Groupe
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # =============================================================================
 # CHEMINS DE BASE
@@ -27,18 +29,20 @@ from pathlib import Path
 # BASE_DIR pointe vers le répertoire racine du projet (contenant manage.py)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Charger les variables d'environnement depuis .env
+load_dotenv(BASE_DIR / '.env')
+
 # =============================================================================
 # SÉCURITÉ
 # =============================================================================
-# Clé secrète utilisée pour le chiffrement (sessions, tokens CSRF, etc.)
-# ATTENTION : En production, utiliser une clé différente stockée dans une variable d'environnement
-SECRET_KEY = 'django-insecure-#aeod9fv!@gc@f5@qclffq#1dol_um_uvn2^+69$z&)e$96h@6'
+# Clé secrète chargée depuis les variables d'environnement
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
 
 # Mode debug : affiche les erreurs détaillées (désactiver en production)
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 # Hôtes autorisés à accéder à l'application
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # =============================================================================
 # APPLICATIONS INSTALLÉES
@@ -122,11 +126,11 @@ DATABASES = {
     # ATTENTION : Base en lecture seule, ne pas modifier les données
     'logigvd': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'logigvd',
-        'USER': 'tlm',
-        'PASSWORD': 'mlt06',
-        'HOST': '192.168.116.10',  # Serveur interne
-        'PORT': '3306',
+        'NAME': os.getenv('DB_LOGIGVD_NAME', 'logigvd'),
+        'USER': os.getenv('DB_LOGIGVD_USER', ''),
+        'PASSWORD': os.getenv('DB_LOGIGVD_PASSWORD', ''),
+        'HOST': os.getenv('DB_LOGIGVD_HOST', ''),
+        'PORT': os.getenv('DB_LOGIGVD_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',  # Support des caractères spéciaux et emojis
         },
@@ -183,22 +187,42 @@ LOGOUT_REDIRECT_URL = 'clients:connexion' # Redirection après déconnexion
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # =============================================================================
-# CONFIGURATION EMAIL
+# CSRF (Protection contre les attaques Cross-Site Request Forgery)
 # =============================================================================
-# Mode développement : affiche les emails dans le terminal Django
-# Utile pour tester les fonctionnalités d'envoi d'email sans serveur SMTP
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@giffaud-groupe.fr'
+# Domaines autorisés pour les requêtes CSRF (nécessaire pour ngrok)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok-free.dev',
+    'https://*.ngrok.io',
+]
 
 # =============================================================================
-# CONFIGURATION EMAIL PRODUCTION (décommenter pour activer)
+# CACHE
 # =============================================================================
-# Pour passer en mode production avec un vrai serveur SMTP :
-# 1. Commenter la ligne EMAIL_BACKEND ci-dessus
-# 2. Décommenter et configurer les lignes suivantes :
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.exemple.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'votre_email@exemple.com'
-# EMAIL_HOST_PASSWORD = 'votre_mot_de_passe'
+# Cache en mémoire locale pour les filtres et données fréquentes
+# En production, utiliser Redis : 'django.core.cache.backends.redis.RedisCache'
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes par défaut
+    }
+}
+
+# =============================================================================
+# CONFIGURATION EMAIL
+# =============================================================================
+# Utilise SMTP si configuré dans .env, sinon affiche dans le terminal
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+if EMAIL_HOST:
+    # Mode SMTP (Mailtrap ou production)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+else:
+    # Mode développement : affiche les emails dans le terminal
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = 'noreply@giffaud-groupe.fr'

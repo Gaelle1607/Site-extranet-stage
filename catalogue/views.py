@@ -28,6 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import Http404
 from django.db.models import Sum
+from django.core.paginator import Paginator
 from decimal import Decimal
 import traceback
 
@@ -145,6 +146,14 @@ def liste_produits(request):
         ]
 
     # =========================================================================
+    # PAGINATION DES PRODUITS
+    # =========================================================================
+    # 24 produits par page (grille de 3x8 ou 4x6)
+    paginator = Paginator(produits, 24)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # =========================================================================
     # CALCUL DU RÉCAPITULATIF DU PANIER
     # =========================================================================
     # Le panier est stocké en session sous forme de dictionnaire {reference: quantite}
@@ -169,7 +178,9 @@ def liste_produits(request):
 
     # Préparation du contexte pour le template
     context = {
-        'produits': produits,
+        'produits': page_obj,  # Page actuelle des produits
+        'page_obj': page_obj,  # Objet pagination pour le template
+        'total_produits': paginator.count,  # Nombre total de produits
         'produits_favoris': produits_favoris,
         'filtres_groupes': filtres_groupes,
         'filtres_actifs': filtres_actifs,
@@ -382,6 +393,8 @@ def commander(request):
             - POST['commentaires']: Commentaires sur la commande (optionnel)
             - POST['date_livraison']: Date de livraison souhaitée (optionnel)
             - POST['date_depart_camions']: Date de départ des camions (optionnel)
+            - GET['filtre']: Liste des filtres actifs (optionnel)
+            - GET['q']: Terme de recherche (optionnel)
             - session['panier']: Contenu du panier pré-rempli
 
     Returns:
@@ -389,6 +402,9 @@ def commander(request):
             - GET: Rendu du template 'cote_client/catalogue/commander.html' avec:
                 - client: Informations du client distant (depuis la base ERP)
                 - produits: Liste des produits avec quantités du panier
+                - filtres_groupes: Groupes de filtres disponibles
+                - filtres_actifs: Liste des filtres actuellement appliqués
+                - recherche: Terme de recherche actuel
             - POST réussi: Redirection vers 'commandes:confirmation' avec
               message de succès
             - POST sans produits: Redirection vers 'catalogue:commander' avec
@@ -418,6 +434,18 @@ def commander(request):
 
     # Récupération de la liste complète des produits du client
     produits = get_produits_client(utilisateur)
+
+    # =========================================================================
+    # PRÉPARATION DES FILTRES
+    # =========================================================================
+    produits, filtres_groupes, _ = preparer_filtres(produits, seuil_occurrences=3)
+
+    # Récupération des paramètres de filtrage depuis l'URL (GET)
+    filtres_actifs = request.GET.getlist("filtre")
+    recherche = request.GET.get('q', '').strip()
+
+    # Application des filtres et de la recherche
+    produits = appliquer_filtres(produits, filtres_actifs, recherche)
 
     # =========================================================================
     # TRAITEMENT DU FORMULAIRE DE COMMANDE (POST)
@@ -517,6 +545,9 @@ def commander(request):
     context = {
         'client': client_distant,
         'produits': produits,
+        'filtres_groupes': filtres_groupes,
+        'filtres_actifs': filtres_actifs,
+        'recherche': recherche,
     }
 
     return render(request, 'cote_client/catalogue/commander.html', context)

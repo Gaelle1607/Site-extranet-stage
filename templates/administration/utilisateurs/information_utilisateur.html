@@ -33,22 +33,14 @@
             </div>
             <div class="card-body">
                 {% if client %}
-                    <p><strong>Nom :</strong> {{ client.nom }}</p>
-                    {% if client.complement %}
-                        <p><strong>Complement :</strong> {{ client.complement }}</p>
-                    {% endif %}
-                    <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers }}</p>
-                    {% if client.adresse %}
-                        <p><strong>Adresse :</strong> {{ client.adresse }}</p>
-                    {% endif %}
-                    {% if client.cp %}
-                        <p><strong>Code postal :</strong> {{ client.cp }}</p>
-                    {% endif %}
-                    {% if client.acheminement %}
-                        <p><strong>Ville :</strong> {{ client.acheminement }}</p>
-                    {% endif %}
+                    <p><strong>Nom :</strong> {{ client.nom|default:"Non renseigné" }}</p>
+                    <p><strong>Complément :</strong> {{ client.complement|default:"Non renseigné" }}</p>
+                    <p><strong>Code tiers :</strong> {{ utilisateur.code_tiers|default:"Non renseigné" }}</p>
+                    <p><strong>Adresse :</strong> {{ client.adresse|default:"Non renseigné" }}</p>
+                    <p><strong>Code postal :</strong> {{ client.cp|default:"Non renseigné" }}</p>
+                    <p><strong>Ville :</strong> {{ client.acheminement|default:"Non renseigné" }}</p>
                 {% else %}
-                    <p class="text-muted">Aucune information client trouvee dans la base distante.</p>
+                    <p class="text-muted">Aucune information client trouvée dans la base distante.</p>
                 {% endif %}
             </div>
         </div>

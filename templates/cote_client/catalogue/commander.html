@@ -1,9 +1,64 @@
 {% extends 'cote_client/base.html' %}
 {% load l10n %}
+{% load static %}
 
 {% block title %}Commander{% endblock %}
 
 {% block content %}
+<!-- Panneau filtres latéral (offcanvas gauche) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="filtresOffcanvas" style="width: 280px;">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title"><i class="bi bi-funnel me-2"></i>Filtres</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="get" id="filtres-form">
+            <!-- Recherche -->
+            <div class="mb-3 p-2 bg-light rounded border">
+                <label class="form-label fw-bold mb-1"><i class="bi bi-search"></i> Recherche</label>
+                <input type="text" name="q" class="form-control form-control-sm" value="{{ recherche }}" placeholder="Nom, référence...">
+            </div>
+
+            <!-- Filtres par groupe (accordéon) -->
+            <div class="accordion accordion-flush" id="accordionFiltres">
+                {% for groupe, filtres in filtres_groupes.items %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed py-2 px-0 fst-italic" type="button"
+                                style="font-size: 0.95rem; background: none; box-shadow: none;"
+                                data-bs-toggle="collapse" data-bs-target="#collapse_{{ forloop.counter }}">
+                            {{ groupe }}
+                        </button>
+                    </h2>
+                    <div id="collapse_{{ forloop.counter }}" class="accordion-collapse collapse">
+                        <div class="accordion-body p-0 pb-2">
+                            {% for code, label in filtres.items %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="filtre" value="{{ code }}" id="filtre_{{ code }}" {% if code in filtres_actifs %}checked{% endif %}>
+                                <label class="form-check-label" style="font-size: 0.8rem;" for="filtre_{{ code }}">{{ label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Boutons -->
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-search"></i> Appliquer
+                </button>
+                {% if recherche or filtres_actifs %}
+                <a href="{% url 'catalogue:commander' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Effacer les filtres
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="passage-commande-container">
     <!-- En-tête -->
     <div class="passage-commande-header">
@@ -20,6 +75,11 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Sélection des produits</h4>
                         <div class="d-flex gap-2 align-items-center">
+                            <!-- Bouton filtres (ouvre le panneau latéral) -->
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#filtresOffcanvas">
+                                <i class="bi bi-funnel"></i> Filtres
+                                {% if filtres_actifs %}<span class="badge bg-primary ms-1">{{ filtres_actifs|length }}</span>{% endif %}
+                            </button>
                             <button type="button" id="vider-panier-btn" class="btn btn-outline-danger btn-sm">
                                 <i class="bi bi-trash"></i> Vider
                             </button>
@@ -75,7 +135,10 @@
                         </div>
                     {% else %}
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>Aucun produit disponible.
+                            <i class="bi bi-info-circle me-2"></i>Aucun produit trouvé.
+                            {% if filtres_actifs or recherche %}
+                            <a href="{% url 'catalogue:commander' %}" class="alert-link">Enlever les filtres</a>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -89,28 +152,36 @@
                         <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Informations client</h5>
                     </div>
                     <div class="card-body">
+                        {% if client.nom %}
                         <div class="mb-2">
                             <small class="text-muted"><i class="bi bi-building me-1"></i>Client</small>
                             <div class="fw-bold">{{ client.nom }}</div>
                         </div>
+                        {% endif %}
                         {% if client.complement %}
                         <div class="mb-2">
                             <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Complément</small>
                             <div>{{ client.complement }}</div>
                         </div>
                         {% endif %}
+                        {% if client.adresse %}
                         <div class="mb-2">
                             <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>Adresse</small>
                             <div>{{ client.adresse }}</div>
                         </div>
+                        {% endif %}
+                        {% if client.cp %}
                         <div class="mb-2">
                             <small class="text-muted"><i class="bi bi-mailbox me-1"></i>Code postal</small>
-                            <div>{{ client.code_postal }}</div>
+                            <div>{{ client.cp }}</div>
                         </div>
+                        {% endif %}
+                        {% if client.acheminement %}
                         <div class="mb-2">
                             <small class="text-muted"><i class="bi bi-pin-map me-1"></i>Ville</small>
                             <div>{{ client.acheminement }}</div>
                         </div>
+                        {% endif %}
                         <hr>
                         <div class="mb-2">
                             <label class="form-label mb-1"><i class="bi bi-truck me-1"></i>Départ camions</label>
@@ -168,6 +239,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% load static %}
-<script src="{% static 'js/commander.js' %}?v=8"></script>
+<script src="{% static 'js/commander.js' %}?v=10"></script>
+<script src="{% static 'js/accordion-filtres.js' %}"></script>
 {% endblock %}

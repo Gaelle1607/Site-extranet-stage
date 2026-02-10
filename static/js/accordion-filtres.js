@@ -48,8 +48,10 @@
 function initAccordionFiltres() {
     // Parcours de tous les groupes d'accordéon
     document.querySelectorAll('#accordionFiltres .accordion-item').forEach(function(item) {
-        // Vérification si le groupe contient une checkbox cochée
-        if (item.querySelector('input[type="checkbox"]:checked')) {
+        var checkedBoxes = item.querySelectorAll('input[type="checkbox"]:checked');
+        var count = checkedBoxes.length;
+
+        if (count > 0) {
             // Récupération des éléments de l'accordéon
             var collapse = item.querySelector('.accordion-collapse');
             var btn = item.querySelector('.accordion-button');
@@ -60,6 +62,20 @@ function initAccordionFiltres() {
             // Mise à jour de l'état du bouton
             btn.classList.remove('collapsed');
             btn.setAttribute('aria-expanded', 'true');
+
+            // Ajout du badge compteur sur le bouton
+            var badge = document.createElement('span');
+            badge.className = 'badge-filtre-actif';
+            badge.textContent = count;
+            btn.appendChild(badge);
+
+            // Mise en évidence des filtres cochés
+            checkedBoxes.forEach(function(checkbox) {
+                var formCheck = checkbox.closest('.form-check');
+                if (formCheck) {
+                    formCheck.classList.add('filtre-actif');
+                }
+            });
         }
     });
 }
