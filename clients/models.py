@@ -48,8 +48,6 @@ class Utilisateur(models.Model):
 
     Relations:
         - user: Lien OneToOne vers django.contrib.auth.models.User
-        - demandes_mdp: Lien inverse vers DemandeMotDePasse
-
     Example:
         >>> utilisateur = Utilisateur.objects.get(user__username='client001')
         >>> print(utilisateur.code_tiers)
@@ -143,72 +141,6 @@ class Utilisateur(models.Model):
                 acheminement=row[4]
             )
         return None
-
-
-class DemandeMotDePasse(models.Model):
-    """
-    Modèle pour les demandes de réinitialisation de mot de passe.
-
-    Ce modèle permet de tracer les demandes faites par les utilisateurs
-    qui ont oublié leur mot de passe. Un administrateur peut consulter
-    ces demandes et les traiter manuellement si nécessaire.
-
-    Workflow:
-        1. L'utilisateur fait une demande de réinitialisation
-        2. Une entrée est créée avec traitee=False
-        3. L'administrateur voit la demande dans le tableau de bord
-        4. Après traitement, traitee passe à True avec date_traitement
-
-    Attributes:
-        utilisateur (ForeignKey): Référence vers l'utilisateur demandeur.
-        date_demande (DateTimeField): Date/heure de la demande (auto).
-        traitee (BooleanField): Indique si la demande a été traitée.
-        date_traitement (DateTimeField): Date/heure du traitement.
-
-    Example:
-        >>> demande = DemandeMotDePasse.objects.create(utilisateur=user)
-        >>> # Plus tard, après traitement:
-        >>> demande.traitee = True
-        >>> demande.date_traitement = timezone.now()
-        >>> demande.save()
-    """
-
-    # Lien vers l'utilisateur qui a fait la demande
-    # CASCADE: si l'utilisateur est supprimé, ses demandes le sont aussi
-    utilisateur = models.ForeignKey(
-        Utilisateur,
-        on_delete=models.CASCADE,
-        related_name='demandes_mdp',
-        verbose_name='Utilisateur'
-    )
-
-    # Date de création de la demande (remplie automatiquement)
-    date_demande = models.DateTimeField('Date de demande', auto_now_add=True)
-
-    # Statut de traitement de la demande
-    traitee = models.BooleanField('Traitée', default=False)
-
-    # Date à laquelle la demande a été traitée (optionnel)
-    date_traitement = models.DateTimeField(
-        'Date de traitement',
-        null=True,
-        blank=True
-    )
-
-    class Meta:
-        verbose_name = 'Demande de mot de passe'
-        verbose_name_plural = 'Demandes de mot de passe'
-        # Tri par date décroissante: les plus récentes en premier
-        ordering = ['-date_demande']
-
-    def __str__(self):
-        """
-        Représentation textuelle de la demande.
-
-        Returns:
-            str: Format "Demande de username - DD/MM/YYYY HH:MM"
-        """
-        return f"Demande de {self.utilisateur.user.username} - {self.date_demande.strftime('%d/%m/%Y %H:%M')}"
 
 
 class TokenResetPassword(models.Model):

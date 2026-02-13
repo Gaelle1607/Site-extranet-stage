@@ -35,7 +35,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.views.decorators.cache import never_cache
 from .forms import ConnexionForm
-from .models import Utilisateur, DemandeMotDePasse, TokenResetPassword
+from .models import Utilisateur, TokenResetPassword
 from catalogue.services import get_client_distant
 
 

@@ -29,20 +29,14 @@ from django.contrib import messages
 from django.http import Http404
 from django.db.models import Sum
 from django.core.paginator import Paginator
-from decimal import Decimal
-import traceback
-
 # Import des services métier pour l'accès aux données produits
-from .services import get_produits_client, get_categories_client, get_produit_by_reference, get_client_distant
+from .services import get_produits_client, get_produit_by_reference, get_client_distant
 
 # Import des fonctions de filtrage partagées avec le module administration
 from administration.views.utils.filtres import preparer_filtres, appliquer_filtres
 
 # Import des modèles de commandes
-from commandes.models import Commande, LigneCommande
-
-# Import du service de génération de fichiers EDI
-from commandes.services import generer_csv_edi
+from commandes.models import LigneCommande
 
 
 @login_required
@@ -484,54 +478,24 @@ def commander(request):
         date_depart_camions = request.POST.get('date_depart_camions') or None
 
         # =====================================================================
-        # CRÉATION DE LA COMMANDE EN BASE DE DONNÉES
+        # MISE À JOUR DU PANIER ET REDIRECTION VERS LE RÉCAPITULATIF
         # =====================================================================
-        # Le numéro de commande est généré automatiquement par la méthode de classe
-        commande = Commande.objects.create(
-            utilisateur=utilisateur,
-            numero=Commande.generer_numero(),
-            date_livraison=date_livraison,
-            date_depart_camions=date_depart_camions,
-            total_ht=Decimal(str(total)),  # Conversion en Decimal pour précision
-            commentaire=commentaires
-        )
-
-        # Création des lignes de commande associées
+        # Mise à jour du panier en session avec les quantités du formulaire
+        panier_maj = {}
         for ligne in lignes:
-            LigneCommande.objects.create(
-                commande=commande,
-                reference_produit=ligne['reference'],
-                nom_produit=ligne['nom'],
-                quantite=ligne['quantite'],
-                prix_unitaire=Decimal(str(ligne['prix'])),
-                total_ligne=Decimal(str(ligne['total']))
-            )
+            panier_maj[ligne['reference']] = ligne['quantite']
+        request.session['panier'] = panier_maj
 
-        # =====================================================================
-        # GÉNÉRATION DU FICHIER EDI
-        # =====================================================================
-        # Le fichier CSV EDI est utilisé pour l'intégration avec le système ERP
-        # Les erreurs sont capturées pour ne pas bloquer la validation
-        try:
-            csv_path = generer_csv_edi(commande, client_distant, lignes)
-            print(f"Fichier EDI généré: {csv_path}")
-            messages.info(request, f"Fichier EDI généré: {csv_path}")
-        except Exception as e:
-            # Log détaillé de l'erreur pour le débogage
-            error_msg = f"Erreur génération EDI: {e}\n{traceback.format_exc()}"
-            print(error_msg)
-            messages.warning(request, f"Erreur génération EDI: {e}")
+        # Stockage des métadonnées pour la page récapitulatif
+        request.session['commande_recap'] = {
+            'date_livraison': date_livraison,
+            'date_depart_camions': date_depart_camions,
+            'commentaires': commentaires,
+        }
+        request.session.modified = True
 
-        # =====================================================================
-        # FINALISATION DE LA COMMANDE
-        # =====================================================================
-        # Vidage du panier après validation de la commande
-        request.session['panier'] = {}
-        request.session.modified = True  # Force la sauvegarde de la session
-
-        # Message de confirmation avec le numéro de commande
-        messages.success(request, f'Votre commande n°{commande.numero} a été envoyée avec succès !')
-        return redirect('commandes:confirmation')
+        # Redirection vers la page récapitulatif
+        return redirect('commandes:valider')
 
     # =========================================================================
     # AFFICHAGE DU FORMULAIRE DE COMMANDE (GET)

@@ -9,9 +9,6 @@
                        href="{% url 'administration:dashboard' %}">
                         <i class="bi bi-house"></i>
                         <span class="d-none d-md-inline ms-2">Accueil</span>
-                        {% if nb_demandes_mdp_global > 0 %}
-                        <span class="badge bg-danger rounded-pill ms-1">{{ nb_demandes_mdp_global }}</span>
-                        {% endif %}
                     </a>
                 </li>
 

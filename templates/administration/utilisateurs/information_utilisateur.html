@@ -12,9 +12,18 @@
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-person"></i> Compte</h5>
-                <a href="{% url 'administration:modifier_utilisateur' utilisateur.id %}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-pencil"></i> Modifier
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'administration:modifier_utilisateur' utilisateur.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <form method="post" action="{% url 'administration:supprimer_utilisateur' utilisateur.id %}" class="d-inline"
+                          onsubmit="return confirm('Supprimer l\'utilisateur {{ utilisateur.user.username }} et toutes ses commandes ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="card-body">
                 <p><strong>Nom d'utilisateur :</strong> {{ utilisateur.user.username }}</p>
@@ -47,7 +56,7 @@
     </div>
 </div>
 
-<div class="d-flex flex-wrap gap-2">
+<div class="d-flex flex-wrap gap-3">
     <a href="{% url 'administration:catalogue_utilisateur' %}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Retour aux utilisateurs
     </a>
@@ -57,12 +66,5 @@
     <a href="{% url 'administration:commande_utilisateur' utilisateur.id %}" class="btn btn-outline-primary">
         <i class="bi bi-cart2"></i> Voir les commandes
     </a>
-    <form method="post" action="{% url 'administration:supprimer_utilisateur' utilisateur.id %}" class="d-inline"
-          onsubmit="return confirm('Supprimer l\'utilisateur {{ utilisateur.user.username }} et toutes ses commandes ?');">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-danger">
-            <i class="bi bi-trash"></i> Supprimer l'utilisateur
-        </button>
-    </form>
 </div>
 {% endblock %}

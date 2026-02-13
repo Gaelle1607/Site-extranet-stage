@@ -4,8 +4,6 @@ CHANGER_MOT_DE_PASSE.PY - Vue de changement de mot de passe utilisateur
 =============================================================================
 
 Permet à un administrateur de changer le mot de passe d'un utilisateur.
-Cette action marque également comme traitées les demandes de mot de passe
-en attente pour cet utilisateur.
 
 Validations :
     - Le mot de passe ne peut pas être vide
@@ -19,9 +17,8 @@ Projet : Extranet Giffaud Groupe
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from django.utils import timezone
 
-from clients.models import Utilisateur, DemandeMotDePasse
+from clients.models import Utilisateur
 from ..utils.decorators import admin_required
 
 
@@ -33,8 +30,7 @@ def changer_mot_de_passe(request, utilisateur_id):
 
     Cette vue est accessible uniquement en POST et permet à un
     administrateur de définir un nouveau mot de passe pour un
-    utilisateur. Elle marque automatiquement comme traitées les
-    demandes de mot de passe en attente pour cet utilisateur.
+    utilisateur.
 
     Args:
         request: L'objet HttpRequest Django
@@ -71,13 +67,6 @@ def changer_mot_de_passe(request, utilisateur_id):
         # =====================================================================
         utilisateur.user.set_password(nouveau_mdp)
         utilisateur.user.save()
-
-        # Marquer les demandes de mot de passe en attente comme traitées
-        # Cela permet de nettoyer le dashboard des demandes résolues
-        DemandeMotDePasse.objects.filter(
-            utilisateur=utilisateur,
-            traitee=False
-        ).update(traitee=True, date_traitement=timezone.now())
 
         messages.success(request, f'Mot de passe de {utilisateur.user.username} modifié avec succès.')
 

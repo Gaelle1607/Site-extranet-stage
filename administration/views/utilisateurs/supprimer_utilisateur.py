@@ -112,7 +112,6 @@ def supprimer_utilisateur(request, utilisateur_id):
     # - Utilisateur (OneToOne avec User)
     # - Commandes (ForeignKey vers Utilisateur)
     # - LigneCommande (ForeignKey vers Commande)
-    # - DemandeMotDePasse (ForeignKey vers Utilisateur)
     utilisateur.user.delete()
 
     messages.success(request, f'L\'utilisateur {username} ({nom_client}) a été supprimé. Vous pouvez le restaurer pendant 5 minutes depuis le tableau de bord.')

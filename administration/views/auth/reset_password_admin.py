@@ -52,7 +52,7 @@ def reset_password_admin(request):
         HttpResponse: Le formulaire ou redirection vers la connexion
     """
     # Import local pour éviter les imports circulaires
-    from ..reset_key import RESET_SECRET_KEY
+    from administration.reset_key import RESET_SECRET_KEY
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()

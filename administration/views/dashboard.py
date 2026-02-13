@@ -10,7 +10,6 @@ d'ensemble de l'activité du système.
 Données affichées :
     - Statistiques : nombre d'utilisateurs, commandes, clients
     - Activités récentes : dernières commandes, nouveaux utilisateurs
-    - Demandes en attente : demandes de mot de passe non traitées
     - Éléments supprimés : commandes/utilisateurs en attente de restauration
 
 Projet : Extranet Giffaud Groupe
@@ -22,7 +21,7 @@ from django.shortcuts import render
 from django.db import connections
 from django.utils import timezone
 
-from clients.models import Utilisateur, DemandeMotDePasse, UtilisateurSupprime, HistoriqueSuppressionUtilisateur
+from clients.models import Utilisateur, UtilisateurSupprime, HistoriqueSuppressionUtilisateur
 from commandes.models import Commande, CommandeSupprimee, HistoriqueSuppression
 from .utils.decorators import admin_required
 
@@ -35,8 +34,7 @@ def dashboard(request):
     Cette vue agrège plusieurs types de données :
     1. Statistiques globales (compteurs)
     2. Activités récentes (5 dernières)
-    3. Demandes de mot de passe en attente
-    4. Commandes et utilisateurs supprimés (restaurables)
+    3. Commandes et utilisateurs supprimés (restaurables)
 
     Le dashboard effectue aussi un nettoyage automatique des éléments
     supprimés dont le délai de restauration a expiré (5 minutes).
@@ -176,22 +174,6 @@ def dashboard(request):
     activites = activites[:5]
 
     # =========================================================================
-    # DEMANDES DE MOT DE PASSE EN ATTENTE
-    # =========================================================================
-    demandes_mdp = DemandeMotDePasse.objects.filter(traitee=False).select_related(
-        'utilisateur', 'utilisateur__user'
-    ).order_by('-date_demande')
-
-    # Enrichir avec le nom du client pour l'affichage
-    demandes_mdp_liste = []
-    for demande in demandes_mdp:
-        client = demande.utilisateur.get_client_distant()
-        demandes_mdp_liste.append({
-            'demande': demande,
-            'nom_client': client.nom if client else demande.utilisateur.code_tiers,
-        })
-
-    # =========================================================================
     # LISTES POUR AFFICHAGE SÉPARÉ
     # =========================================================================
     # Liste des commandes supprimées avec informations enrichies
@@ -225,9 +207,6 @@ def dashboard(request):
         'nb_clients': nb_clients,
         # Activités
         'activites': activites,
-        # Demandes de mot de passe
-        'demandes_mdp': demandes_mdp_liste,
-        'nb_demandes_mdp': len(demandes_mdp_liste),
         # Éléments supprimés
         'commandes_supprimees': commandes_supprimees_liste,
         'nb_commandes_supprimees': len(commandes_supprimees_liste),

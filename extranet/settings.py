@@ -98,7 +98,6 @@ TEMPLATES = [
 
                 # Processeurs de contexte personnalisés
                 'commandes.context_processors.panier_count',    # Nombre d'articles dans le panier
-                'clients.context_processors.demandes_mdp_count',  # Nombre de demandes de mot de passe
             ],
         },
     },
@@ -215,7 +214,7 @@ CACHES = {
 # Utilise SMTP si configuré dans .env, sinon affiche dans le terminal
 EMAIL_HOST = os.getenv('EMAIL_HOST', '')
 if EMAIL_HOST:
-    # Mode SMTP (Mailtrap ou production)
+    # Mode SMTP
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')

@@ -6,7 +6,6 @@ MODELS.PY - Modèles de l'application Administration
 Cette application ne définit pas de modèles propres car elle utilise
 les modèles des autres applications :
     - clients.Utilisateur : Gestion des utilisateurs
-    - clients.DemandeMotDePasse : Demandes de réinitialisation
     - commandes.Commande : Gestion des commandes
     - catalogue.* : Accès au catalogue produits
 
